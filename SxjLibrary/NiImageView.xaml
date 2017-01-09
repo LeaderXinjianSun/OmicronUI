@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="SxjLibrary.NiImageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:wfi ="clr-namespace:System.Windows.Forms.Integration;assembly=WindowsFormsIntegration"
+             xmlns:vbaicomm="clr-namespace:NationalInstruments.Vision.WindowsForms;assembly=NationalInstruments.Vision.Common"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:SxjLibrary"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid>
+        <wfi:WindowsFormsHost>
+            <vbaicomm:ImageViewer x:Name="imageViewer" ShowToolbar="True"  ToolsShown="All"></vbaicomm:ImageViewer>
+        </wfi:WindowsFormsHost>
+            
+    </Grid>
+</UserControl>
