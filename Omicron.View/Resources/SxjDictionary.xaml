@@ -190,7 +190,7 @@
         <Setter Property="Width" Value="70"></Setter>
     </Style>
     <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxBase}" x:Key="TextBoxPath">
-        <Setter Property="Width" Value="380"></Setter>
+        <Setter Property="Width" Value="320"></Setter>
     </Style>
     <Style TargetType="StackPanel" x:Key="ParameterHorizontalStackPanel">
         <Setter Property="Orientation" Value="Horizontal"></Setter>

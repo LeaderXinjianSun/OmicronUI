@@ -34,6 +34,7 @@ namespace Omicron
             e.Cancel = true;
             //ActionMessages.ExecuteAction("winclose");
             mydialog.changeaccent("Red");
+            MainGrid1.Visibility = Visibility.Collapsed;
             var r = await mydialog.showconfirm("确定要关闭程序吗？");
             if (r)
             {
@@ -41,6 +42,7 @@ namespace Omicron
             }
             else
             {
+                MainGrid1.Visibility = Visibility.Visible;
                 mydialog.changeaccent("Cobalt");
             }
         }

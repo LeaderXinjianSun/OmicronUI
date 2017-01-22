@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:mvvm="clr-namespace:BingLibrary.hjb;assembly=BingLibrary"
-             xmlns:local="clr-namespace:Omicron.View"
              xmlns:sxj="clr-namespace:SxjLibrary;assembly=SxjLibrary"
+             xmlns:local="clr-namespace:Omicron.View"
              mc:Ignorable="d" 
              d:DesignHeight="768" d:DesignWidth="1024">
     <UserControl.Resources>
@@ -26,73 +26,12 @@
                 <ColumnDefinition></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            
-        </Grid>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"></ColumnDefinition>
-                <ColumnDefinition></ColumnDefinition>
-            </Grid.ColumnDefinitions>
-            <Image Margin="20" Source="pictures/搜狗截图20170111151834.jpg"></Image>
-            <Grid Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition></RowDefinition>
-                    <RowDefinition></RowDefinition>
-                    <RowDefinition Height="4*"></RowDefinition>
-                </Grid.RowDefinitions>
-                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                    <Label Content="条码" FontSize="20"></Label>
-                    <TextBox Width="260" Margin="5,0,0,0" VerticalContentAlignment="Center" FontSize="16" Text="XXXXXXXXXXXXXXXX"></TextBox>
-                </StackPanel>
-                <StackPanel Grid.Row="1" VerticalAlignment="Center" Orientation="Horizontal">
-                    <Label Content="料号" FontSize="20"></Label>
-                    <ComboBox Width="120" Margin="5,0,0,0" ItemsSource="{Binding PartsItems}" SelectedIndex="1"></ComboBox>
-                </StackPanel>
-                <StackPanel Grid.Row="2">
-                    <StackPanel.Resources>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Width" Value="70"></Setter>
-                            <Setter Property="TextAlignment" Value="Right"></Setter>
-                            <Setter Property="VerticalAlignment" Value="Center"></Setter>
-                        </Style>
-                        <Style TargetType="TextBox">
-                            <Setter Property="Width" Value="100"></Setter>
-                            <Setter Property="Height" Value="24"></Setter>
-                            <Setter Property="Margin" Value="0,1,0,0"></Setter>
-                            <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
-                        </Style>
-                    </StackPanel.Resources>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="版本： "></TextBlock>
-                        <TextBox Text="V1"></TextBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="工号： "></TextBlock>
-                        <TextBox Text="333"></TextBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="作业员： "></TextBlock>
-                        <TextBox Text="0741"></TextBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="治具编号： "></TextBlock>
-                        <TextBox Text="F21"></TextBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="机台编号： "></TextBlock>
-                        <TextBox Text="M03"></TextBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="线体： "></TextBlock>
-                        <TextBox Text="L04"></TextBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="工令： "></TextBlock>
-                        <TextBox Text="IMPT"></TextBox>
-                    </StackPanel>
-                </StackPanel>
+            <Grid Grid.ColumnSpan="2" Margin="20">
+                <sxj:HcImageView Image="{Binding hImage}" HObjectList="{Binding hObjectList}" ActiveIndex="{Binding ActiveIndex, Mode=TwoWay}" Repaint="{Binding Repaint}" ROIChanged="{Binding ROIChanged,Mode=OneWayToSource}"  ROIList="{Binding ROIList}"></sxj:HcImageView>
             </Grid>
         </Grid>
+
+
         
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>

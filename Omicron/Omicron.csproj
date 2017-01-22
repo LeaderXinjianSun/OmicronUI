@@ -38,6 +38,9 @@
     <ApplicationIcon>icons\google_earth_64px_1099826_easyicon.net.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="halcondotnet">
+      <HintPath>C:\Program Files\MVTec\HALCON-10.0\bin\dotnet35\halcondotnet.dll</HintPath>
+    </Reference>
     <Reference Include="MahApps.Metro, Version=1.3.0.0, Culture=neutral, PublicKeyToken=f4fb5a3c4d1e5b4f, processorArchitecture=MSIL">
       <HintPath>..\packages\MahApps.Metro.1.3.0\lib\net45\MahApps.Metro.dll</HintPath>
       <Private>True</Private>
@@ -130,6 +133,10 @@
     <ProjectReference Include="..\SxjLibrary\SxjLibrary.csproj">
       <Project>{9e80e0a7-9c30-40c9-b63d-c64530a1ce6b}</Project>
       <Name>SxjLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ViewROI\ViewROI.csproj">
+      <Project>{c4f5c5de-7ea8-47fe-8218-48138f48965f}</Project>
+      <Name>ViewROI</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

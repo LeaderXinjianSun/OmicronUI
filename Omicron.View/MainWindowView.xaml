@@ -23,14 +23,15 @@
         </Grid.RowDefinitions>
         <Menu>
             <MenuItem Header="主页" Command="{mvvm:ActionAuto ChoseHomePage}"></MenuItem>
-            <MenuItem Header="数据库"></MenuItem>
-            <MenuItem Header="Logs"></MenuItem>
-            <MenuItem Header="帮助"></MenuItem>
+            <MenuItem Header="参数" Command="{mvvm:ActionAuto ChoseParameterPage}"></MenuItem>
             <MenuItem Header="关于" Command="{mvvm:ActionAuto ChoseAboutPage}"></MenuItem>
         </Menu>
         <Grid Grid.RowSpan="2" Grid.Row="1">
             <Grid Visibility="{Binding HomePageVisibility}">
                 <local:HomePage></local:HomePage>
+            </Grid>
+            <Grid Visibility="{Binding ParameterPageVisibility}">
+                <local:ParameterPage></local:ParameterPage>
             </Grid>
             <Grid Visibility="{Binding AboutPageVisibility}">
                 <local:AboutPage></local:AboutPage>
