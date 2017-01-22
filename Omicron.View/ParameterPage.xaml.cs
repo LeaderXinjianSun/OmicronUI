@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO.Ports;
 
 namespace Omicron.View
 {
@@ -23,6 +24,25 @@ namespace Omicron.View
         public ParameterPage()
         {
             InitializeComponent();
+        }
+        private void ComboBox_DropDownOpened(object sender, EventArgs e)
+        {
+            var validComNames = SerialPort.GetPortNames();
+            foreach (var comName in validComNames)
+            {
+                if (!Com.Items.Contains(comName))
+                    Com.Items.Add(comName);
+            }
+            List<string> toRemove = new List<string>();
+            foreach (string addedName in Com.Items)
+            {
+                if (!validComNames.Contains(addedName))
+                    toRemove.Add(addedName);
+            }
+            foreach (string remove in toRemove)
+            {
+                Com.Items.Remove(remove);
+            }
         }
     }
 }

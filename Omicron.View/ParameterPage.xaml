@@ -53,6 +53,31 @@
                     <TextBox Style="{StaticResource TextBoxPath}" Text="{Binding HcVisionScriptFileName}"></TextBox>
                     <Button Content="打开" Style="{StaticResource ParameterButton}" Command="{mvvm:ActionAutoWithParam Selectfile}" CommandParameter="1"></Button>
                 </StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.8*"></ColumnDefinition>
+                        <ColumnDefinition></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Style="{StaticResource ParameterHorizontalStackPanel}">
+                            <TextBlock Style="{StaticResource TextBlockParameterName}" Text="串口"></TextBlock>
+                            <ComboBox Style="{StaticResource ComboBoxBase}" x:Name="Com" Text="{Binding PortName}" DropDownOpened="ComboBox_DropDownOpened" IsEditable="True" IsReadOnly="True"></ComboBox>
+                            <TextBlock Style="{StaticResource TextBlockParameterName}" Margin="10,0,0,0" Text="站号"></TextBlock>
+                            <TextBox Style="{StaticResource TextBoxPort}" Text="{Binding ModbusState}"></TextBox>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource TextBlockBase}" Text="波特率： 19200&#13;数据位： 7&#13;停止位： 1&#13;奇偶校验： Even"></TextBlock>
+                    </StackPanel>
+                    <control:Tile Style="{StaticResource TileBase}" Grid.Column="1" Command="{mvvm:ActionAuto SaveParameter}" Title="保存">
+                        <Rectangle Style="{StaticResource MetroTileRectangle}">
+                            <Rectangle.OpacityMask>
+                                <VisualBrush Stretch="Fill"
+                                     Visual="{DynamicResource appbar_save}" />
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                    </control:Tile>
+                </Grid>
+
+                
             </StackPanel>
         </GroupBox>
     </Grid>

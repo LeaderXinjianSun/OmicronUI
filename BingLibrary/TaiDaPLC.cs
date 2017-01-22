@@ -85,9 +85,11 @@ namespace BingLibrary.hjb
                 Debug.Print(ex.Message);
             }
         }
-
+        public delegate void ReConnectEventHandle();
+        public event ReConnectEventHandle ReConnectUp;
         public bool ReConnect()
         {
+            ReConnectUp();
             while (SerialPort1.PortName != "" && SerialPort1.IsOpen == false && mClose == false)
             {
                 try
@@ -284,6 +286,27 @@ namespace BingLibrary.hjb
         public bool ReadM(string mDevAdd)
         {
             string temps = PLCRead("01", mDevAdd);
+            int tempi = Convert.ToInt32(temps, 16);
+            tempi = tempi & 1;
+            return tempi == 1 ? true : false;
+        }
+        public bool SetM(string mDevIndex,string mDevAdd, bool mDevData)
+        {
+            bool result = false;
+            if (mDevData)
+            {
+                result = PLCWrite(mDevIndex, mDevAdd, "FF00");
+            }
+            else
+            {
+                result = PLCWrite(mDevIndex, mDevAdd, "0000");
+            }
+            return result;
+        }
+
+        public bool ReadM(string mDevIndex,string mDevAdd)
+        {
+            string temps = PLCRead(mDevIndex, mDevAdd);
             int tempi = Convert.ToInt32(temps, 16);
             tempi = tempi & 1;
             return tempi == 1 ? true : false;

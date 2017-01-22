@@ -13,6 +13,7 @@ using ViewROI;
 using HalconDotNet;
 using System.IO;
 using System.Windows.Forms;
+using System.IO.Ports;
 
 namespace Omicron.ViewModel
 {
@@ -34,10 +35,28 @@ namespace Omicron.ViewModel
         public virtual int ActiveIndex { set; get; }
         public virtual bool Repaint { set; get; }
         public virtual string HcVisionScriptFileName { set; get; }
+
+        public virtual ObservableCollection<string> Ports { set; get; } = new ObservableCollection<string>();
+        public virtual string PortName { set; get; }
+        public virtual bool IsPLCConnect { set; get; }
+        public virtual string ModbusState { set; get; }
         #endregion
         #region 变量
         private HdevEngine hdevEngine = new HdevEngine();
         private string iniParameterPath = System.Environment.CurrentDirectory + "\\Parameter.ini";
+        private TaiDaPLC td;
+        #endregion
+        #region 构造函数
+        public MainDataContext()
+        {
+            //td.ReConnectUp += ReConnectUpEventHandle;
+        }
+        #endregion
+        #region 事件响应函数
+        private void ReConnectUpEventHandle()
+        {
+            IsPLCConnect = false;
+        }
         #endregion
         #region 画面切换
         public void ChoseHomePage()
@@ -135,6 +154,19 @@ namespace Omicron.ViewModel
 
             dlg.Dispose();
         }
+        public void SaveParameter()
+        {
+
+            var r1 = WriteParameter();
+            if (r1)
+            {
+                Msg = messagePrint.AddMessage("写入参数成功");
+            }
+            else
+            {
+                Msg = messagePrint.AddMessage("写入参数成功");
+            }
+        }
         #endregion
         #region 初始化
         [Initialize]
@@ -151,6 +183,11 @@ namespace Omicron.ViewModel
             }
             cameraHcInit();
             await Task.Delay(100);
+            CameraHcInspect();
+            Msg = messagePrint.AddMessage("检测相机初始化完成");
+            td = new TaiDaPLC(PortName, 19200, System.IO.Ports.Parity.Even, 7, System.IO.Ports.StopBits.One);
+            td.ReConnectUp += ReConnectUpEventHandle;
+            await Task.Delay(100);
         }
         #endregion
         #region 读写操作
@@ -159,7 +196,8 @@ namespace Omicron.ViewModel
             try
             {
                 HcVisionScriptFileName = Inifile.INIGetStringValue(iniParameterPath, "Camera", "HcVisionScriptFileName", @"C:\test.hdev");
-
+                PortName = Inifile.INIGetStringValue(iniParameterPath, "SerialPort", "Com", "COM1");
+                ModbusState = Inifile.INIGetStringValue(iniParameterPath, "SerialPort", "ModbusState", "01");
                 return true;
             }
             catch (Exception ex)
@@ -172,7 +210,8 @@ namespace Omicron.ViewModel
         {
             try
             {
-
+                Inifile.INIWriteValue(iniParameterPath, "SerialPort", "Com", PortName);
+                Inifile.INIWriteValue(iniParameterPath, "SerialPort", "ModbusState", ModbusState);
                 return true;
             }
             catch (Exception ex)
@@ -181,6 +220,66 @@ namespace Omicron.ViewModel
                 return false;
             }
         }
+        #endregion
+        #region PLC
+
+        [Initialize]
+        public async void RunPLC()
+        {
+            while (true)
+            {
+                await Task.Delay(100);
+                try
+                {                    
+                    if (td == null) continue;
+                    if (!td.State)
+                    {
+                        td.Connect();
+                    }
+                    if (td.State)
+                    {
+                        if (!td.ReadM(ModbusState, "M1000"))
+                        {
+                            td.Closed();
+                            td.State = false;
+                            td = new TaiDaPLC(PortName, 19200, System.IO.Ports.Parity.Even, 7, System.IO.Ports.StopBits.One);
+                        }
+                        else
+                        {
+                            //if (td.ReadM(StartAction))
+                            //{
+                            //    td.SetM(StartAction, false);
+                            //    try
+                            //    {
+                            //        Inspect();
+                            //    }
+                            //    catch
+                            //    {
+                            //        td.SetM(Position1, false);
+                            //        td.SetM(Position2, false);
+                            //        td.SetM(Position3, false);
+                            //        td.SetM(Position4, false);
+                            //        td.SetM(Position5, false);
+                            //        td.SetM(Position6, false);
+
+                            //    }
+                            //    td.SetM(EndAction, true);
+                            //}
+                        }
+                    }
+
+                    
+                }
+                catch 
+                {
+                    td.State = false;
+
+                }
+                IsPLCConnect = td.State;
+
+            }
+        }
+
         #endregion
 
     }
