@@ -52,11 +52,24 @@ namespace Omicron.ViewModel
         public virtual bool FindMo4 { set; get; }
         public virtual bool FindMo5 { set; get; }
         public virtual bool FindMo6 { set; get; }
+        public virtual string LoginButtonString { set; get; } = "登录";
+        public virtual string LoginUserName { set; get; } = "Leader";
+        public virtual string LoginPassword { set; get; } = "jsldr";
+        public virtual bool isLogin { set; get; } = false;
+        public virtual string isHideView { set; get; } = "Visible";
         #endregion
         #region 变量
         private HdevEngine hdevEngine = new HdevEngine();
         private string iniParameterPath = System.Environment.CurrentDirectory + "\\Parameter.ini";
         private TaiDaPLC td;
+        private string StartAction = "M120";
+        private string EndAction = "M127";
+        private string Position1 = "M121";
+        private string Position2 = "M122";
+        private string Position3 = "M123";
+        private string Position4 = "M124";
+        private string Position5 = "M125";
+        private string Position6 = "M126";
         #endregion
         #region 构造函数
         public MainDataContext()
@@ -76,13 +89,17 @@ namespace Omicron.ViewModel
             AboutPageVisibility = "Collapsed";
             HomePageVisibility = "Visible";
             ParameterPageVisibility = "Collapsed";
-            Msg = messagePrint.AddMessage("Selected HomePage");
+            //Msg = messagePrint.AddMessage("Selected HomePage");
+            isLogin = false;
+            LoginButtonString = "登录";
         }
         public void ChoseAboutPage()
         {
             AboutPageVisibility = "Visible";
             HomePageVisibility = "Collapsed";
             ParameterPageVisibility = "Collapsed";
+            isLogin = false;
+            LoginButtonString = "登录";
         }
         public void ChoseParameterPage()
         {
@@ -115,6 +132,7 @@ namespace Omicron.ViewModel
         }
         public void CameraHcInspect()
         {
+            Msg = messagePrint.AddMessage("手动拍照");
             Async.RunFuncAsync(cameraHcInspect, null);
         }
         public void cameraHcInspect()
@@ -216,6 +234,36 @@ namespace Omicron.ViewModel
                 Msg = messagePrint.AddMessage("写入参数成功");
             }
         }
+        public async void LoginAction()
+        {
+            List<string> r;
+            if (isLogin == false)
+            {
+                isHideView = "Collapsed";
+                r = await mydialog.showlogin();
+                isHideView = "Visible";
+                if (r[0] == LoginUserName && r[1] == LoginPassword)
+                {
+                    isLogin = !isLogin;
+                }
+
+            }
+            else
+            {
+                isLogin = !isLogin;
+            }
+
+
+            if (isLogin == true)
+            {
+                LoginButtonString = "登出";
+            }
+            else
+            {
+                LoginButtonString = "登录";
+                ChoseHomePage();
+            }
+        }
         #endregion
         #region 初始化
         [Initialize]
@@ -295,25 +343,30 @@ namespace Omicron.ViewModel
                         }
                         else
                         {
-                            //if (td.ReadM(StartAction))
-                            //{
-                            //    td.SetM(StartAction, false);
-                            //    try
-                            //    {
-                            //        Inspect();
-                            //    }
-                            //    catch
-                            //    {
-                            //        td.SetM(Position1, false);
-                            //        td.SetM(Position2, false);
-                            //        td.SetM(Position3, false);
-                            //        td.SetM(Position4, false);
-                            //        td.SetM(Position5, false);
-                            //        td.SetM(Position6, false);
-
-                            //    }
-                            //    td.SetM(EndAction, true);
-                            //}
+                            if (td.ReadM(ModbusState, StartAction))
+                            {
+                                td.SetM(ModbusState, StartAction, false);
+                                Msg = messagePrint.AddMessage(StartAction + " ," + "0");
+                                td.SetM(ModbusState, EndAction, false);
+                                Msg = messagePrint.AddMessage(EndAction + " ," + "0");
+                                try
+                                {
+                                    //Inspect();
+                                    Msg = messagePrint.AddMessage("PLC触发拍照");
+                                    Async.RunFuncAsync(cameraHcInspect, PLCTakePhoteCallback);
+                                }
+                                catch
+                                {
+                                    td.SetM(ModbusState, Position1, false);
+                                    td.SetM(ModbusState, Position2, false);
+                                    td.SetM(ModbusState, Position3, false);
+                                    td.SetM(ModbusState, Position4, false);
+                                    td.SetM(ModbusState, Position5, false);
+                                    td.SetM(ModbusState, Position6, false);
+                                    Msg = messagePrint.AddMessage("视觉脚本异常");
+                                }
+                                
+                            }
                         }
                     }
 
@@ -328,7 +381,78 @@ namespace Omicron.ViewModel
 
             }
         }
+        private async void PLCTakePhoteCallback()
+        {
 
+            if (FindMo1)
+            {
+                td.SetM(ModbusState, Position1, true);
+                Msg = messagePrint.AddMessage(Position1 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position1, false);
+                Msg = messagePrint.AddMessage(Position1 + " ," + "0");
+            }
+
+            if (FindMo2)
+            {
+                td.SetM(ModbusState, Position2, true);
+                Msg = messagePrint.AddMessage(Position2 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position2, false);
+                Msg = messagePrint.AddMessage(Position2 + " ," + "0");
+            }
+
+            if (FindMo3)
+            {
+                td.SetM(ModbusState, Position3, true);
+                Msg = messagePrint.AddMessage(Position3 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position3, false);
+                Msg = messagePrint.AddMessage(Position3 + " ," + "0");
+            }
+
+            if (FindMo4)
+            {
+                td.SetM(ModbusState, Position4, true);
+                Msg = messagePrint.AddMessage(Position4 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position4, false);
+                Msg = messagePrint.AddMessage(Position4 + " ," + "0");
+            }
+
+            if (FindMo5)
+            {
+                td.SetM(ModbusState, Position5, true);
+                Msg = messagePrint.AddMessage(Position5 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position5, false);
+                Msg = messagePrint.AddMessage(Position5 + " ," + "0");
+            }
+
+            if (FindMo6)
+            {
+                td.SetM(ModbusState, Position6, true);
+                Msg = messagePrint.AddMessage(Position6 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position6, false);
+                Msg = messagePrint.AddMessage(Position6 + " ," + "0");
+            }
+            await Task.Delay(1);
+            td.SetM(ModbusState, EndAction, true);
+            Msg = messagePrint.AddMessage(EndAction + " ," + "1");
+        }
         #endregion
 
     }
