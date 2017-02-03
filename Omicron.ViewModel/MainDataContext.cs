@@ -40,6 +40,18 @@ namespace Omicron.ViewModel
         public virtual string PortName { set; get; }
         public virtual bool IsPLCConnect { set; get; }
         public virtual string ModbusState { set; get; }
+        public virtual bool FindFill1 { set; get; }
+        public virtual bool FindFill2 { set; get; }
+        public virtual bool FindFill3 { set; get; }
+        public virtual bool FindFill4 { set; get; }
+        public virtual bool FindFill5 { set; get; }
+        public virtual bool FindFill6 { set; get; }
+        public virtual bool FindMo1 { set; get; }
+        public virtual bool FindMo2 { set; get; }
+        public virtual bool FindMo3 { set; get; }
+        public virtual bool FindMo4 { set; get; }
+        public virtual bool FindMo5 { set; get; }
+        public virtual bool FindMo6 { set; get; }
         #endregion
         #region 变量
         private HdevEngine hdevEngine = new HdevEngine();
@@ -110,24 +122,61 @@ namespace Omicron.ViewModel
             ObservableCollection<HObject> objectList = new ObservableCollection<HObject>();
             hdevEngine.inspectengine();
             hImage = hdevEngine.getImage("Image");
-            //var fill1 = hdevEngine.getmeasurements("fill1");
-            //var fill2 = hdevEngine.getmeasurements("fill2");
-            //var fill3 = hdevEngine.getmeasurements("fill3");
-            //var fill4 = hdevEngine.getmeasurements("fill4");
-            //var fill5 = hdevEngine.getmeasurements("fill5");
-            //var fill6 = hdevEngine.getmeasurements("fill6");
-            //FindFill1 = fill1.ToString() == "1";
-            //FindFill2 = fill2.ToString() == "1";
-            //FindFill3 = fill3.ToString() == "1";
-            //FindFill4 = fill4.ToString() == "1";
-            //FindFill5 = fill5.ToString() == "1";
-            //FindFill6 = fill6.ToString() == "1";
-            //objectList.Add(hdevEngine.getRegion("Regions1"));
-            //objectList.Add(hdevEngine.getRegion("Regions2"));
-            //objectList.Add(hdevEngine.getRegion("Regions3"));
-            //objectList.Add(hdevEngine.getRegion("Regions4"));
-            //objectList.Add(hdevEngine.getRegion("Regions5"));
-            //objectList.Add(hdevEngine.getRegion("Regions6"));
+            var fill1 = hdevEngine.getmeasurements("fill1");
+            var fill2 = hdevEngine.getmeasurements("fill2");
+            var fill3 = hdevEngine.getmeasurements("fill3");
+            var fill4 = hdevEngine.getmeasurements("fill4");
+            var fill5 = hdevEngine.getmeasurements("fill5");
+            var fill6 = hdevEngine.getmeasurements("fill6");
+
+            var fill7 = hdevEngine.getmeasurements("fill7");
+            var fill8 = hdevEngine.getmeasurements("fill8");
+            var fill9 = hdevEngine.getmeasurements("fill9");
+            var fill10 = hdevEngine.getmeasurements("fill10");
+            var fill11 = hdevEngine.getmeasurements("fill11");
+            var fill12 = hdevEngine.getmeasurements("fill12");
+
+            FindFill1 = (fill1.ToString() == "1") & (fill7.ToString() == "1");
+            FindFill2 = (fill2.ToString() == "1") & (fill8.ToString() == "1");
+            FindFill3 = (fill3.ToString() == "1") & (fill9.ToString() == "1");
+            FindFill4 = (fill4.ToString() == "1") & (fill10.ToString() == "1");
+            FindFill5 = (fill5.ToString() == "1") & (fill11.ToString() == "1");
+            FindFill6 = (fill6.ToString() == "1") & (fill12.ToString() == "1");
+
+            var mo1 = hdevEngine.getmeasurements("mo1");
+            var mo2 = hdevEngine.getmeasurements("mo2");
+            var mo3 = hdevEngine.getmeasurements("mo3");
+            var mo4 = hdevEngine.getmeasurements("mo4");
+            var mo5 = hdevEngine.getmeasurements("mo5");
+            var mo6 = hdevEngine.getmeasurements("mo6");
+
+            FindMo1 = mo1.ToString() == "0";
+            FindMo2 = mo2.ToString() == "0";
+            FindMo3 = mo3.ToString() == "0";
+            FindMo4 = mo4.ToString() == "0";
+            FindMo5 = mo5.ToString() == "0";
+            FindMo6 = mo6.ToString() == "0";
+
+            objectList.Add(hdevEngine.getRegion("Regions1"));
+            objectList.Add(hdevEngine.getRegion("Regions2"));
+            objectList.Add(hdevEngine.getRegion("Regions3"));
+            objectList.Add(hdevEngine.getRegion("Regions4"));
+            objectList.Add(hdevEngine.getRegion("Regions5"));
+            objectList.Add(hdevEngine.getRegion("Regions6"));
+
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity1"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity2"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity3"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity4"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity5"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity6"));
+
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity7"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity8"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity9"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity10"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity11"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity12"));
             hObjectList = objectList;
         }
 
