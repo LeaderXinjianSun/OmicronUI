@@ -168,12 +168,12 @@ namespace Omicron.ViewModel
             var mo5 = hdevEngine.getmeasurements("mo5");
             var mo6 = hdevEngine.getmeasurements("mo6");
 
-            FindMo1 = mo1.ToString() == "0";
-            FindMo2 = mo2.ToString() == "0";
-            FindMo3 = mo3.ToString() == "0";
-            FindMo4 = mo4.ToString() == "0";
-            FindMo5 = mo5.ToString() == "0";
-            FindMo6 = mo6.ToString() == "0";
+            FindMo1 = mo1.ToString() == "1";
+            FindMo2 = mo2.ToString() == "1";
+            FindMo3 = mo3.ToString() == "1";
+            FindMo4 = mo4.ToString() == "1";
+            FindMo5 = mo5.ToString() == "1";
+            FindMo6 = mo6.ToString() == "1";
 
             objectList.Add(hdevEngine.getRegion("Regions1"));
             objectList.Add(hdevEngine.getRegion("Regions2"));
