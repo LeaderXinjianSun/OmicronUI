@@ -70,6 +70,14 @@ namespace Omicron.ViewModel
         private string Position4 = "M124";
         private string Position5 = "M125";
         private string Position6 = "M126";
+
+
+        private string Position7 = "M211";
+        private string Position8 = "M212";
+        private string Position9 = "M213";
+        private string Position10 = "M214";
+        private string Position11 = "M215";
+        private string Position12 = "M216";
         #endregion
         #region 构造函数
         public MainDataContext()
@@ -154,19 +162,12 @@ namespace Omicron.ViewModel
             var fill11 = hdevEngine.getmeasurements("fill11");
             var fill12 = hdevEngine.getmeasurements("fill12");
 
-            //FindFill1 = (fill1.ToString() == "1") & (fill7.ToString() == "1");
-            //FindFill2 = (fill2.ToString() == "1") & (fill8.ToString() == "1");
-            //FindFill3 = (fill3.ToString() == "1") & (fill9.ToString() == "1");
-            //FindFill4 = (fill4.ToString() == "1") & (fill10.ToString() == "1");
-            //FindFill5 = (fill5.ToString() == "1") & (fill11.ToString() == "1");
-            //FindFill6 = (fill6.ToString() == "1") & (fill12.ToString() == "1");
-
-            FindFill1 = (fill1.ToString() == "1");
-            FindFill2 = (fill2.ToString() == "1");
-            FindFill3 = (fill3.ToString() == "1");
-            FindFill4 = (fill4.ToString() == "1");
-            FindFill5 = (fill5.ToString() == "1");
-            FindFill6 = (fill6.ToString() == "1");
+            FindFill1 =  (fill7.ToString() == "0");
+            FindFill2 =  (fill8.ToString() == "0");
+            FindFill3 =  (fill9.ToString() == "0");
+            FindFill4 =  (fill10.ToString() == "0");
+            FindFill5 =  (fill11.ToString() == "0");
+            FindFill6 =  (fill12.ToString() == "0");
 
             var mo1 = hdevEngine.getmeasurements("mo1");
             var mo2 = hdevEngine.getmeasurements("mo2");
@@ -175,12 +176,12 @@ namespace Omicron.ViewModel
             var mo5 = hdevEngine.getmeasurements("mo5");
             var mo6 = hdevEngine.getmeasurements("mo6");
 
-            FindMo1 = mo1.ToString() == "1";
-            FindMo2 = mo2.ToString() == "1";
-            FindMo3 = mo3.ToString() == "1";
-            FindMo4 = mo4.ToString() == "1";
-            FindMo5 = mo5.ToString() == "1";
-            FindMo6 = mo6.ToString() == "1";
+            FindMo1 = mo1.ToString() == "1" | fill1.ToString() == "0";
+            FindMo2 = mo2.ToString() == "1" | fill2.ToString() == "0";
+            FindMo3 = mo3.ToString() == "1" | fill3.ToString() == "0";
+            FindMo4 = mo4.ToString() == "1" | fill4.ToString() == "0";
+            FindMo5 = mo5.ToString() == "1" | fill5.ToString() == "0";
+            FindMo6 = mo6.ToString() == "1" | fill6.ToString() == "0";
 
             objectList.Add(hdevEngine.getRegion("Regions1"));
             objectList.Add(hdevEngine.getRegion("Regions2"));
@@ -196,12 +197,12 @@ namespace Omicron.ViewModel
             //objectList.Add(hdevEngine.getRegion("Regions_Intensity5"));
             //objectList.Add(hdevEngine.getRegion("Regions_Intensity6"));
 
-            //objectList.Add(hdevEngine.getRegion("Regions_Intensity7"));
-            //objectList.Add(hdevEngine.getRegion("Regions_Intensity8"));
-            //objectList.Add(hdevEngine.getRegion("Regions_Intensity9"));
-            //objectList.Add(hdevEngine.getRegion("Regions_Intensity10"));
-            //objectList.Add(hdevEngine.getRegion("Regions_Intensity11"));
-            //objectList.Add(hdevEngine.getRegion("Regions_Intensity12"));
+            objectList.Add(hdevEngine.getRegion("Regions_Intensity7"));
+            objectList.Add(hdevEngine.getRegion("Regions_Intensity8"));
+            objectList.Add(hdevEngine.getRegion("Regions_Intensity9"));
+            objectList.Add(hdevEngine.getRegion("Regions_Intensity10"));
+            objectList.Add(hdevEngine.getRegion("Regions_Intensity11"));
+            objectList.Add(hdevEngine.getRegion("Regions_Intensity12"));
             hObjectList = objectList;
         }
 
@@ -370,6 +371,18 @@ namespace Omicron.ViewModel
                                     td.SetM(ModbusState, Position4, false);
                                     td.SetM(ModbusState, Position5, false);
                                     td.SetM(ModbusState, Position6, false);
+                                    td.SetM(ModbusState, Position7, false);
+                                    td.SetM(ModbusState, Position8, false);
+                                    td.SetM(ModbusState, Position9, false);
+                                    td.SetM(ModbusState, Position10, false);
+                                    td.SetM(ModbusState, Position11, false);
+                                    td.SetM(ModbusState, Position12, false);
+
+
+
+
+
+
                                     Msg = messagePrint.AddMessage("视觉脚本异常");
                                 }
                                 
@@ -391,7 +404,7 @@ namespace Omicron.ViewModel
         private async void PLCTakePhoteCallback()
         {
 
-            if (FindMo1 || FindFill1 == false)
+            if (FindMo1)
             {
                 td.SetM(ModbusState, Position1, true);
                 Msg = messagePrint.AddMessage(Position1 + " ," + "1");
@@ -402,7 +415,7 @@ namespace Omicron.ViewModel
                 Msg = messagePrint.AddMessage(Position1 + " ," + "0");
             }
 
-            if (FindMo2 || FindFill2 == false)
+            if (FindMo2)
             {
                 td.SetM(ModbusState, Position2, true);
                 Msg = messagePrint.AddMessage(Position2 + " ," + "1");
@@ -413,7 +426,7 @@ namespace Omicron.ViewModel
                 Msg = messagePrint.AddMessage(Position2 + " ," + "0");
             }
 
-            if (FindMo3 || FindFill3 == false)
+            if (FindMo3)
             {
                 td.SetM(ModbusState, Position3, true);
                 Msg = messagePrint.AddMessage(Position3 + " ," + "1");
@@ -424,7 +437,7 @@ namespace Omicron.ViewModel
                 Msg = messagePrint.AddMessage(Position3 + " ," + "0");
             }
 
-            if (FindMo4 || FindFill4 == false)
+            if (FindMo4)
             {
                 td.SetM(ModbusState, Position4, true);
                 Msg = messagePrint.AddMessage(Position4 + " ," + "1");
@@ -435,7 +448,7 @@ namespace Omicron.ViewModel
                 Msg = messagePrint.AddMessage(Position4 + " ," + "0");
             }
 
-            if (FindMo5 || FindFill5 == false)
+            if (FindMo5)
             {
                 td.SetM(ModbusState, Position5, true);
                 Msg = messagePrint.AddMessage(Position5 + " ," + "1");
@@ -446,7 +459,7 @@ namespace Omicron.ViewModel
                 Msg = messagePrint.AddMessage(Position5 + " ," + "0");
             }
 
-            if (FindMo6 || FindFill6 == false)
+            if (FindMo6)
             {
                 td.SetM(ModbusState, Position6, true);
                 Msg = messagePrint.AddMessage(Position6 + " ," + "1");
@@ -456,6 +469,73 @@ namespace Omicron.ViewModel
                 td.SetM(ModbusState, Position6, false);
                 Msg = messagePrint.AddMessage(Position6 + " ," + "0");
             }
+
+            if (FindFill1)
+            {
+                td.SetM(ModbusState, Position7, true);
+                Msg = messagePrint.AddMessage(Position7 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position7, false);
+                Msg = messagePrint.AddMessage(Position7 + " ," + "0");
+            }
+
+            if (FindFill2)
+            {
+                td.SetM(ModbusState, Position8, true);
+                Msg = messagePrint.AddMessage(Position8 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position8, false);
+                Msg = messagePrint.AddMessage(Position8 + " ," + "0");
+            }
+
+            if (FindFill3)
+            {
+                td.SetM(ModbusState, Position9, true);
+                Msg = messagePrint.AddMessage(Position9 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position9, false);
+                Msg = messagePrint.AddMessage(Position9 + " ," + "0");
+            }
+
+            if (FindFill4)
+            {
+                td.SetM(ModbusState, Position10, true);
+                Msg = messagePrint.AddMessage(Position10 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position10, false);
+                Msg = messagePrint.AddMessage(Position10 + " ," + "0");
+            }
+
+            if (FindFill5)
+            {
+                td.SetM(ModbusState, Position11, true);
+                Msg = messagePrint.AddMessage(Position11 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position11, false);
+                Msg = messagePrint.AddMessage(Position11 + " ," + "0");
+            }
+
+            if (FindFill6)
+            {
+                td.SetM(ModbusState, Position12, true);
+                Msg = messagePrint.AddMessage(Position12 + " ," + "1");
+            }
+            else
+            {
+                td.SetM(ModbusState, Position12, false);
+                Msg = messagePrint.AddMessage(Position12 + " ," + "0");
+            }
+
             await Task.Delay(1);
             td.SetM(ModbusState, EndAction, true);
             Msg = messagePrint.AddMessage(EndAction + " ," + "1");
