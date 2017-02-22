@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<hdevelop file_version="1.0" halcon_version="10.0" cs="344095226">
+<hdevelop file_version="1.0" halcon_version="10.0" cs="1046108942">
 <procedure name="main">
 <interface/>
 <body>
@@ -13,6 +13,7 @@
 <l>endtry</l>
 <l>dev_close_window()</l>
 <l>grab_image (Image, AcqHandle)</l>
+<l>* read_image (Image, 'C:/Users/lenovo/Desktop/当前项目/CA9/201727221837144.bmp')</l>
 <l>get_image_pointer1 (Image, Pointer, Type, Width, Height)</l>
 <l>dev_open_window (0, 0, Width/2, Height/2, 'red', WindowHandle)</l>
 <l>dev_display (Image)</l>
@@ -39,12 +40,12 @@
 <l>reduce_domain (Saturation, Rectangle5, ImageReduced5)</l>
 <l>reduce_domain (Saturation, Rectangle6, ImageReduced6)</l>
 <c></c>
-<l>threshold (ImageReduced1, Regions1, 85, 255)</l>
-<l>threshold (ImageReduced2, Regions2, 85, 255)</l>
-<l>threshold (ImageReduced3, Regions3, 85, 255)</l>
-<l>threshold (ImageReduced4, Regions4, 85, 255)</l>
-<l>threshold (ImageReduced5, Regions5, 85, 255)</l>
-<l>threshold (ImageReduced6, Regions6, 85, 255)</l>
+<l>threshold (ImageReduced1, Regions1, 135, 255)</l>
+<l>threshold (ImageReduced2, Regions2, 135, 255)</l>
+<l>threshold (ImageReduced3, Regions3, 135, 255)</l>
+<l>threshold (ImageReduced4, Regions4, 135, 255)</l>
+<l>threshold (ImageReduced5, Regions5, 135, 255)</l>
+<l>threshold (ImageReduced6, Regions6, 135, 255)</l>
 <c></c>
 <l>area_center (Regions1, Area1, Row1, Column1)</l>
 <l>area_center (Regions2, Area2, Row2, Column2)</l>
@@ -117,6 +118,14 @@
 <l>threshold (ImageReduced_Intensity11, Regions_Intensity11, 200, 255)</l>
 <l>threshold (ImageReduced_Intensity12, Regions_Intensity12, 200, 255)</l>
 <c></c>
+<l>connection (Regions_Intensity7, ConnectedRegions7)</l>
+<l>connection (Regions_Intensity8, ConnectedRegions8)</l>
+<l>connection (Regions_Intensity9, ConnectedRegions9)</l>
+<l>connection (Regions_Intensity10, ConnectedRegions10)</l>
+<l>connection (Regions_Intensity11, ConnectedRegions11)</l>
+<l>connection (Regions_Intensity12, ConnectedRegions12)</l>
+<c></c>
+<c></c>
 <l>area_center (Regions_Intensity1, Area_Intensity1, Row1, Column1)</l>
 <l>area_center (Regions_Intensity2, Area_Intensity2, Row2, Column2)</l>
 <l>area_center (Regions_Intensity3, Area_Intensity3, Row3, Column3)</l>
@@ -124,12 +133,19 @@
 <l>area_center (Regions_Intensity5, Area_Intensity5, Row5, Column5)</l>
 <l>area_center (Regions_Intensity6, Area_Intensity6, Row6, Column6)</l>
 <c></c>
-<l>area_center (Regions_Intensity7, Area_Intensity7, Row7, Column7)</l>
-<l>area_center (Regions_Intensity8, Area_Intensity8, Row8, Column8)</l>
-<l>area_center (Regions_Intensity9, Area_Intensity9, Row9, Column9)</l>
-<l>area_center (Regions_Intensity10, Area_Intensity10, Row10, Column10)</l>
-<l>area_center (Regions_Intensity11, Area_Intensity11, Row11, Column11)</l>
-<l>area_center (Regions_Intensity12, Area_Intensity12, Row12, Column12)</l>
+<l>area_center (ConnectedRegions7, Area_Intensity7, Row7, Column7)</l>
+<l>area_center (ConnectedRegions8, Area_Intensity8, Row8, Column8)</l>
+<l>area_center (ConnectedRegions9, Area_Intensity9, Row9, Column9)</l>
+<l>area_center (ConnectedRegions10, Area_Intensity10, Row10, Column10)</l>
+<l>area_center (ConnectedRegions11, Area_Intensity11, Row11, Column11)</l>
+<l>area_center (ConnectedRegions12, Area_Intensity12, Row12, Column12)</l>
+<c></c>
+<l>tuple_max(Area_Intensity7,Area_Intensity_Max7)</l>
+<l>tuple_max(Area_Intensity8,Area_Intensity_Max8)</l>
+<l>tuple_max(Area_Intensity9,Area_Intensity_Max9)</l>
+<l>tuple_max(Area_Intensity10,Area_Intensity_Max10)</l>
+<l>tuple_max(Area_Intensity11,Area_Intensity_Max11)</l>
+<l>tuple_max(Area_Intensity12,Area_Intensity_Max12)</l>
 <c></c>
 <l>if (Area_Intensity1 &gt; 600)</l>
 <l>    fill1 := 1</l>
@@ -167,49 +183,48 @@
 <l>    fill6 := 0</l>
 <l>endif</l>
 <c></c>
-<l>if (Area_Intensity7 &gt; 400)</l>
+<l>if (Area_Intensity_Max7 &gt; 400 and Area_Intensity_Max7 &lt; 500)</l>
 <l>    fill7 := 1</l>
 <l>else</l>
 <l>    fill7 := 0</l>
 <l>endif</l>
 <c></c>
-<l>if (Area_Intensity8 &gt; 400)</l>
+<l>if (Area_Intensity_Max8 &gt; 400 and Area_Intensity_Max8 &lt; 500)</l>
 <l>    fill8 := 1</l>
 <l>else</l>
 <l>    fill8 := 0</l>
 <l>endif</l>
 <c></c>
-<l>if (Area_Intensity9 &gt; 400)</l>
+<l>if (Area_Intensity_Max9 &gt; 400 and Area_Intensity_Max9 &lt; 500)</l>
 <l>    fill9 := 1</l>
 <l>else</l>
 <l>    fill9 := 0</l>
 <l>endif</l>
 <c></c>
-<l>if (Area_Intensity10 &gt; 400)</l>
+<l>if (Area_Intensity_Max10 &gt; 400 and Area_Intensity_Max10 &lt; 500)</l>
 <l>    fill10 := 1</l>
 <l>else</l>
 <l>    fill10 := 0</l>
 <l>endif</l>
 <c></c>
-<l>if (Area_Intensity11 &gt; 400)</l>
+<l>if (Area_Intensity_Max11 &gt; 400 and Area_Intensity_Max11 &lt; 500)</l>
 <l>    fill11 := 1</l>
 <l>else</l>
 <l>    fill11 := 0</l>
 <l>endif</l>
 <c></c>
-<l>if (Area_Intensity12 &gt; 400)</l>
+<l>if (Area_Intensity_Max12 &gt; 400 and Area_Intensity_Max12 &lt; 500)</l>
 <l>    fill12 := 1</l>
 <l>else</l>
 <l>    fill12 := 0</l>
 <l>endif</l>
 <l>get_image_time (Image, MSecond, Second, Minute, Hour, Day, YDay, Month, Year)</l>
-<l>if(mo1 = 1 or mo2 = 1 or mo3 = 1 or mo4 = 1 or mo5 = 1 or mo6 = 1)</l>
+<l>if(mo1 = 1 or mo2 = 1 or mo3 = 1 or mo4 = 1 or mo5 = 1 or mo6 = 1 or fill7 = 0 or fill8 = 0 or fill9 = 0 or fill10 = 0 or fill11 = 0 or fill12 = 0)</l>
 <l>    write_image (Image, 'bmp', 0, 'E:/images/' + Year + Month + Day + Hour + Minute + Second + MSecond + '.bmp')</l>
 <l>endif</l>
 <c>* Do something</c>
 <l>* close_framegrabber (AcqHandle)</l>
 <c>*0.126</c>
-<c></c>
 </body>
 <docu id="main">
 <parameters/>
