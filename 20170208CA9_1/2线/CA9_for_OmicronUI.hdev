@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<hdevelop file_version="1.0" halcon_version="10.0" cs="929244485">
+<hdevelop file_version="1.0" halcon_version="10.0" cs="925062470">
 <procedure name="main">
 <interface/>
 <body>
@@ -26,12 +26,12 @@
 <l>gen_rectangle1 (Rectangle5, 0, 690, 120, 790)</l>
 <l>gen_rectangle1 (Rectangle6, 0, 1050, 120, 1150)</l>
 <c></c>
-<l>gen_rectangle1 (Rectangle7, 476, 254, 548, 318)</l>
+<l>gen_rectangle1 (Rectangle7, 476, 154, 548, 318)</l>
 <l>gen_rectangle1 (Rectangle8, 476, 592, 548, 656)</l>
-<l>gen_rectangle1 (Rectangle9, 476, 960, 548, 1024)</l>
-<l>gen_rectangle1 (Rectangle10, 410, 336, 482, 400)</l>
+<l>gen_rectangle1 (Rectangle9, 476, 960, 548, 1124)</l>
+<l>gen_rectangle1 (Rectangle10, 410, 236, 482, 400)</l>
 <l>gen_rectangle1 (Rectangle11, 432, 692, 504, 756)</l>
-<l>gen_rectangle1 (Rectangle12, 434, 1040, 506, 1104)</l>
+<l>gen_rectangle1 (Rectangle12, 434, 1040, 506, 1204)</l>
 <c></c>
 <l>reduce_domain (Saturation, Rectangle1, ImageReduced1)</l>
 <l>reduce_domain (Saturation, Rectangle2, ImageReduced2)</l>
