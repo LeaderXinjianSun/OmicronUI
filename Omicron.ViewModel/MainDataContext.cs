@@ -14,6 +14,7 @@ using HalconDotNet;
 using System.IO;
 using System.Windows.Forms;
 using System.IO.Ports;
+using 臻鼎科技OraDB;
 
 namespace Omicron.ViewModel
 {
@@ -58,6 +59,12 @@ namespace Omicron.ViewModel
         public virtual string LoginPassword { set; get; } = "jsldr";
         public virtual bool isLogin { set; get; } = false;
         public virtual string isHideView { set; get; } = "Visible";
+
+        public virtual string ScanPortName { set; get; }
+        public virtual string BLID { set; get; }
+        public virtual string BLUID { set; get; }
+        public virtual string BLMID { set; get; }
+
         #endregion
         #region 变量
         private HdevEngine hdevEngine = new HdevEngine();
@@ -317,6 +324,9 @@ namespace Omicron.ViewModel
                 HcVisionScriptFileName = Inifile.INIGetStringValue(iniParameterPath, "Camera", "HcVisionScriptFileName", @"C:\test.hdev");
                 PortName = Inifile.INIGetStringValue(iniParameterPath, "SerialPort", "Com", "COM1");
                 ModbusState = Inifile.INIGetStringValue(iniParameterPath, "SerialPort", "ModbusState", "01");
+                BLID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLID", "Null");
+                BLUID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLUID", "Null");
+                BLMID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLMID", "Null");
                 return true;
             }
             catch (Exception ex)

@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Media.Animation;
+using BingLibrary.hjb;
 
 namespace Omicron.View
 {
@@ -21,11 +22,68 @@ namespace Omicron.View
     /// </summary>
     public partial class HomePage : UserControl
     {
-
+        private string iniParameterPath = System.Environment.CurrentDirectory + "\\Parameter.ini";
         public HomePage()
         {
             InitializeComponent();
         }
 
+        private void TextBox1_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            this.TextBox1.IsReadOnly = false;
+        }
+
+        private void TextBox1_LostFocus(object sender, RoutedEventArgs e)
+        {
+            this.TextBox1.IsReadOnly = true;
+            try
+            {
+                Inifile.INIWriteValue(iniParameterPath, "SQLMSG", "BLID", TextBox1.Text);
+            }
+            catch 
+            {
+
+                
+            }
+        }
+
+        private void TextBox3_LostFocus(object sender, RoutedEventArgs e)
+        {
+            this.TextBox3.IsReadOnly = true;
+            try
+            {
+                Inifile.INIWriteValue(iniParameterPath, "SQLMSG", "BLMID", TextBox2.Text); 
+            }
+            catch
+            {
+
+
+            }
+        }
+
+        private void TextBox3_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            this.TextBox3.IsReadOnly = false;
+
+        }
+
+        private void TextBox2_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            this.TextBox2.IsReadOnly = false;
+        }
+
+        private void TextBox2_LostFocus(object sender, RoutedEventArgs e)
+        {
+            this.TextBox2.IsReadOnly = true;
+            try
+            {
+                Inifile.INIWriteValue(iniParameterPath, "SQLMSG", "BLUID", TextBox3.Text);
+            }
+            catch
+            {
+
+
+            }
+        }
     }
 }
