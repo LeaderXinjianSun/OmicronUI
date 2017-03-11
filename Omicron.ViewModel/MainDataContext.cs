@@ -25,6 +25,7 @@ namespace Omicron.ViewModel
         public virtual string HomePageVisibility { set; get; } = "Visible";
         //ParameterPageVisibility
         public virtual string ParameterPageVisibility { set; get; } = "Collapsed";
+        public virtual string ScanOperatePageVisibility { set; get; } = "Collapsed";
         public virtual string Msg { set; get; } = "";
         private MessagePrint messagePrint = new MessagePrint();
         private dialog mydialog = new dialog();
@@ -97,6 +98,17 @@ namespace Omicron.ViewModel
             AboutPageVisibility = "Collapsed";
             HomePageVisibility = "Visible";
             ParameterPageVisibility = "Collapsed";
+            ScanOperatePageVisibility = "Collapsed";
+            //Msg = messagePrint.AddMessage("Selected HomePage");
+            isLogin = false;
+            LoginButtonString = "登录";
+        }
+        public void ChoseScanOperatePage()
+        {
+            AboutPageVisibility = "Collapsed";
+            HomePageVisibility = "Collapsed";
+            ParameterPageVisibility = "Collapsed";
+            ScanOperatePageVisibility = "Visible";
             //Msg = messagePrint.AddMessage("Selected HomePage");
             isLogin = false;
             LoginButtonString = "登录";
@@ -106,6 +118,7 @@ namespace Omicron.ViewModel
             AboutPageVisibility = "Visible";
             HomePageVisibility = "Collapsed";
             ParameterPageVisibility = "Collapsed";
+            ScanOperatePageVisibility = "Collapsed";
             isLogin = false;
             LoginButtonString = "登录";
         }
@@ -114,6 +127,7 @@ namespace Omicron.ViewModel
             AboutPageVisibility = "Collapsed";
             HomePageVisibility = "Collapsed";
             ParameterPageVisibility = "Visible";
+            ScanOperatePageVisibility = "Collapsed";
         }
         #endregion
         #region Halcon

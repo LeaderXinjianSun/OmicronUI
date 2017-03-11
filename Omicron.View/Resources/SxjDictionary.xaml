@@ -175,6 +175,9 @@
     <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockBase}" x:Key="TextBlockParameterName">
         <Setter Property="Width" Value="50"></Setter>
     </Style>
+    <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockBase}" x:Key="TextBlockParameterMidName">
+        <Setter Property="Width" Value="80"></Setter>
+    </Style>
     <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockBase}" x:Key="TextBlockParameterLoneName">
         <Setter Property="Width" Value="120"></Setter>
     </Style>
