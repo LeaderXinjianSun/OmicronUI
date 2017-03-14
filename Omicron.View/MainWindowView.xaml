@@ -45,10 +45,22 @@
         
         <StatusBar Grid.Row="3">
             <StatusBarItem>
-                <TextBlock>下位机</TextBlock>
+                <TextBlock>PLC</TextBlock>
             </StatusBarItem>
             <StatusBarItem>
                 <Ellipse Style="{StaticResource PLCConnectStatus}"></Ellipse>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock>扫码</TextBlock>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Ellipse Style="{StaticResource ScanConnectStatus}"></Ellipse>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock>数据库</TextBlock>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Ellipse Style="{StaticResource TCPConnectStatus}"></Ellipse>
             </StatusBarItem>
         </StatusBar>
     </Grid>

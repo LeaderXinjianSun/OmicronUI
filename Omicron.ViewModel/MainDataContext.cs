@@ -15,6 +15,7 @@ using System.IO;
 using System.Windows.Forms;
 using System.IO.Ports;
 using 臻鼎科技OraDB;
+using Omicron.Model;
 
 namespace Omicron.ViewModel
 {
@@ -65,6 +66,15 @@ namespace Omicron.ViewModel
         public virtual string BLUID { set; get; }
         public virtual string BLMID { set; get; }
 
+        public virtual bool IsScanConnect { set; get; }
+        public virtual bool IsTCPConnect { set; get; }
+
+        public virtual string BarcodeString { set; get; } = "Null";
+
+        public virtual string SQL_ora_server { set; get; }
+        public virtual string SQL_ora_user { set; get; }
+        public virtual string SQL_ora_pwd { set; get; }
+
         #endregion
         #region 变量
         private HdevEngine hdevEngine = new HdevEngine();
@@ -91,12 +101,32 @@ namespace Omicron.ViewModel
         public MainDataContext()
         {
             //td.ReConnectUp += ReConnectUpEventHandle;
+
+            Scan.StateChanged += Scan_StateChanged;
+            try
+            {
+                ScanPortName = Inifile.INIGetStringValue(iniParameterPath, "SerialPort", "ScanCom", "COM1");
+                Scan.ini(ScanPortName);
+                Scan.Connect();
+                Msg = messagePrint.AddMessage("扫码枪 连接成功");
+            }
+            catch
+            {
+                Msg = messagePrint.AddMessage("扫码枪 连接失败");
+
+            }
         }
+
+
         #endregion
         #region 事件响应函数
         private void ReConnectUpEventHandle()
         {
             IsPLCConnect = false;
+        }
+        private void Scan_StateChanged(object sender, EventArgs e)
+        {
+            IsScanConnect = Scan.State;
         }
         #endregion
         #region 画面切换
@@ -293,6 +323,58 @@ namespace Omicron.ViewModel
                 ChoseHomePage();
             }
         }
+        public void ScanAction()
+        {
+            Scan.GetBarCode(ScanActionGetBarProcessCallback);
+        }
+        private void ScanActionGetBarProcessCallback(string bar)
+        {
+            string resultstr = bar == "Error" ? "失败" : bar;
+            string[] strs = resultstr.Split('\r');
+            Msg = messagePrint.AddMessage("扫码 " + strs[0]);
+            BarcodeString = strs[0];
+        }
+
+        public void SearchAction()
+        {
+            ConnectDBTest();
+        }
+        #region 数据库操作
+        private void setLocalTime(string strDateTime)
+        {
+            DateTimeUtility.SYSTEMTIME st = new DateTimeUtility.SYSTEMTIME();
+            DateTime dt = Convert.ToDateTime(strDateTime);
+            st.FromDateTime(dt);
+            DateTimeUtility.SetLocalTime(ref st);
+        }
+        private void ConnectDBTest()
+        {
+            try
+            {
+                OraDB oraDB = new OraDB(SQL_ora_server, SQL_ora_user, SQL_ora_pwd);
+                if (oraDB.isConnect())
+                {
+                    string dbtime = oraDB.sfc_getServerDateTime();
+                    setLocalTime(dbtime);
+                    Msg = messagePrint.AddMessage("获取数据库时间： " + dbtime);
+
+                    IsTCPConnect = true;
+                }
+                else
+                {
+                    Msg = messagePrint.AddMessage("数据库未连接");
+
+                    IsTCPConnect = false;
+                }
+                oraDB.disconnect();
+            }
+            catch (Exception ex)
+            {
+                Msg = messagePrint.AddMessage("获取数据库时间失败");
+                IsTCPConnect = false;
+            }
+        }
+        #endregion
         #endregion
         #region 初始化
         [Initialize]
@@ -323,10 +405,14 @@ namespace Omicron.ViewModel
             {
                 HcVisionScriptFileName = Inifile.INIGetStringValue(iniParameterPath, "Camera", "HcVisionScriptFileName", @"C:\test.hdev");
                 PortName = Inifile.INIGetStringValue(iniParameterPath, "SerialPort", "Com", "COM1");
+                ScanPortName = Inifile.INIGetStringValue(iniParameterPath, "SerialPort", "ScanCom", "COM1");
                 ModbusState = Inifile.INIGetStringValue(iniParameterPath, "SerialPort", "ModbusState", "01");
                 BLID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLID", "Null");
                 BLUID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLUID", "Null");
                 BLMID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLMID", "Null");
+                SQL_ora_server = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "Server", "mesdb07");
+                SQL_ora_user = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "User", "sfcabar");
+                SQL_ora_pwd = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "Passwold", "sfcabar*168");
                 return true;
             }
             catch (Exception ex)
@@ -341,6 +427,10 @@ namespace Omicron.ViewModel
             {
                 Inifile.INIWriteValue(iniParameterPath, "SerialPort", "Com", PortName);
                 Inifile.INIWriteValue(iniParameterPath, "SerialPort", "ModbusState", ModbusState);
+                Inifile.INIWriteValue(iniParameterPath, "SerialPort", "ScanCom", ScanPortName);
+                Inifile.INIWriteValue(iniParameterPath, "Oracle", "Server", SQL_ora_server);
+                Inifile.INIWriteValue(iniParameterPath, "Oracle", "User", SQL_ora_user);
+                Inifile.INIWriteValue(iniParameterPath, "Oracle", "Passwold", SQL_ora_pwd);
                 return true;
             }
             catch (Exception ex)
@@ -410,6 +500,12 @@ namespace Omicron.ViewModel
                                     Msg = messagePrint.AddMessage("视觉脚本异常");
                                 }
                                 
+                            }
+                            if (td.ReadM(ModbusState, "M95"))
+                            {
+                                td.SetM(ModbusState, "M120", false);
+                                td.SetM(ModbusState, "M121", false);
+                                Scan.GetBarCode(PLCGetBarProcessCallback);
                             }
                         }
                     }
@@ -564,7 +660,22 @@ namespace Omicron.ViewModel
             td.SetM(ModbusState, EndAction, true);
             Msg = messagePrint.AddMessage(EndAction + " ," + "1");
         }
+        private void PLCGetBarProcessCallback(string bar)
+        {
+            string resultstr = bar == "Error" ? "失败" : bar;
+            string[] strs = resultstr.Split('\r');
+            Msg = messagePrint.AddMessage("扫码 " + strs[0]);
+            BarcodeString = strs[0];
+            td.SetM(ModbusState, "M95", false);
+            if (bar == "Error")
+            {
+                td.SetM(ModbusState, "M121", true);
+            }
+            else
+            {
+                td.SetM(ModbusState, "M120", true);
+            }
+        }
         #endregion
-
     }
 }
