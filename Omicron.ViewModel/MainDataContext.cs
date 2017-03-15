@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using System.IO.Ports;
 using 臻鼎科技OraDB;
 using Omicron.Model;
+using System.Data;
 
 namespace Omicron.ViewModel
 {
@@ -65,15 +66,19 @@ namespace Omicron.ViewModel
         public virtual string BLID { set; get; }
         public virtual string BLUID { set; get; }
         public virtual string BLMID { set; get; }
+        public virtual string BLNAME { set; get; }
 
         public virtual bool IsScanConnect { set; get; }
         public virtual bool IsTCPConnect { set; get; }
 
-        public virtual string BarcodeString { set; get; } = "Null";
+        public virtual string BarcodeString { set; get; } = "C466023HV1AG580AF-KPS";
 
         public virtual string SQL_ora_server { set; get; }
         public virtual string SQL_ora_user { set; get; }
         public virtual string SQL_ora_pwd { set; get; }
+
+        public virtual DataTable PanelDt { set; get; }
+        public virtual DataTable SinglDt { set; get; }
 
         #endregion
         #region 变量
@@ -96,6 +101,8 @@ namespace Omicron.ViewModel
         private string Position10 = "M214";
         private string Position11 = "M215";
         private string Position12 = "M216";
+        static string[] arrField = new string[1];
+        static string[] arrValue = new string[1];
         #endregion
         #region 构造函数
         public MainDataContext()
@@ -337,7 +344,13 @@ namespace Omicron.ViewModel
 
         public void SearchAction()
         {
-            ConnectDBTest();
+            //ConnectDBTest();
+            if (BarcodeString.Length > 7)
+            {
+                LookforDt(BarcodeString);
+            }
+            //string s = DateTime.Now.ToString();
+
         }
         #region 数据库操作
         private void setLocalTime(string strDateTime)
@@ -374,6 +387,71 @@ namespace Omicron.ViewModel
                 IsTCPConnect = false;
             }
         }
+        private bool LookforDt(string barcode)
+        {
+            
+            try
+            {
+                OraDB oraDB = new OraDB(SQL_ora_server, SQL_ora_user, SQL_ora_pwd);
+                CA9SQLDATA cA9SQLDATA = new CA9SQLDATA();
+                cA9SQLDATA.BLDATE = DateTime.Now.ToString();
+
+                cA9SQLDATA.BLID = BLID.ToUpper();
+                cA9SQLDATA.BLNAME = BLNAME.ToUpper();
+                cA9SQLDATA.BLUID = BLUID.ToUpper();
+                cA9SQLDATA.BLMID = BLMID.ToUpper();
+                string tablename = "sfcdata.barautbind";
+                if (oraDB.isConnect())
+                {
+                    IsTCPConnect = true;
+                    arrField[0] = "SCBARCODE";
+                    arrValue[0] = barcode.ToUpper();
+                    
+                    DataSet s = oraDB.selectSQL(tablename.ToUpper(), arrField, arrValue);
+                    SinglDt = s.Tables[0];
+                    if (SinglDt.Rows.Count == 0)
+                    {
+                        Msg = messagePrint.AddMessage("未查询到 " + barcode + " 信息");
+                        oraDB.disconnect();
+                        return false;
+                    }
+                    else
+                    {
+                        string panelbar = (string)SinglDt.Rows[0]["SCPNLBAR"];
+                        //string[,] arrFieldAndNewValue = { { "BLDATE", cA9SQLDATA.BLDATE }, { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
+                        string[,] arrFieldAndNewValue = { { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
+                        //string[,] arrFieldAndNewValue = { { "BLDATE", "TO_DATE('2007-06-12 10:00:00','YYYY-MM-DD HH24:MI:SS')" }, { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
+                        string[,] arrFieldAndOldValue = { { "SCPNLBAR", panelbar } };
+                        oraDB.updateSQL(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
+                        Msg = messagePrint.AddMessage("数据更新完成");
+                        arrField[0] = "SCPNLBAR";
+                        arrValue[0] = panelbar.ToUpper();
+                        DataSet s1 = oraDB.selectSQL(tablename.ToUpper(), arrField, arrValue);
+                        PanelDt = s1.Tables[0];
+                        oraDB.disconnect();
+                        return true;
+                    }
+                    
+                }
+                else
+                {
+                    IsTCPConnect = true;
+                    Msg = messagePrint.AddMessage("数据库连接失败");
+                    oraDB.disconnect();
+                    return false;
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                
+                Console.WriteLine(ex.Message);
+                Msg = messagePrint.AddMessage("查询数据库出错");
+                return false;
+
+            }
+            
+        }
         #endregion
         #endregion
         #region 初始化
@@ -396,6 +474,7 @@ namespace Omicron.ViewModel
             td = new TaiDaPLC(PortName, 19200, System.IO.Ports.Parity.Even, 7, System.IO.Ports.StopBits.One);
             td.ReConnectUp += ReConnectUpEventHandle;
             await Task.Delay(100);
+            ConnectDBTest();
         }
         #endregion
         #region 读写操作
@@ -410,6 +489,7 @@ namespace Omicron.ViewModel
                 BLID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLID", "Null");
                 BLUID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLUID", "Null");
                 BLMID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLMID", "Null");
+                BLNAME = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLNAME", "Null");
                 SQL_ora_server = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "Server", "mesdb07");
                 SQL_ora_user = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "User", "sfcabar");
                 SQL_ora_pwd = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "Passwold", "sfcabar*168");
@@ -501,10 +581,11 @@ namespace Omicron.ViewModel
                                 }
                                 
                             }
-                            if (td.ReadM(ModbusState, "M95"))
+                            if (td.ReadM(ModbusState, "M195"))
                             {
-                                td.SetM(ModbusState, "M120", false);
-                                td.SetM(ModbusState, "M121", false);
+                                td.SetM(ModbusState, "M196", false);
+                                td.SetM(ModbusState, "M197", false);
+                                td.SetM(ModbusState, "M195", false);
                                 Scan.GetBarCode(PLCGetBarProcessCallback);
                             }
                         }
@@ -666,16 +747,24 @@ namespace Omicron.ViewModel
             string[] strs = resultstr.Split('\r');
             Msg = messagePrint.AddMessage("扫码 " + strs[0]);
             BarcodeString = strs[0];
-            td.SetM(ModbusState, "M95", false);
+            td.SetM(ModbusState, "M195", false);
             if (bar == "Error")
             {
-                td.SetM(ModbusState, "M121", true);
+                td.SetM(ModbusState, "M197", true);
             }
             else
             {
-                td.SetM(ModbusState, "M120", true);
+                td.SetM(ModbusState, "M196", true);
             }
         }
         #endregion
+    }
+    public struct CA9SQLDATA
+    {
+        public string BLDATE;   //折线作业时间
+        public string BLID;     //折线治具编号
+        public string BLNAME;   //折线治具名称
+        public string BLUID;    //折线人员
+        public string BLMID;    //折线机台编号
     }
 }

@@ -85,5 +85,24 @@ namespace Omicron.View
 
             }
         }
+
+        private void TextBox4_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            this.TextBox4.IsReadOnly = false;
+        }
+
+        private void TextBox4_LostFocus(object sender, RoutedEventArgs e)
+        {
+            this.TextBox4.IsReadOnly = true;
+            try
+            {
+                Inifile.INIWriteValue(iniParameterPath, "SQLMSG", "BLNAME", TextBox4.Text);
+            }
+            catch
+            {
+
+
+            }
+        }
     }
 }

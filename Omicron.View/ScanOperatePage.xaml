@@ -108,10 +108,10 @@
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
             <GroupBox Header="子条码">
-                <DataGrid></DataGrid>
+                <DataGrid ItemsSource="{Binding SinglDt}"></DataGrid>
             </GroupBox>
             <GroupBox Header="母条码" Grid.Row="1">
-                <DataGrid></DataGrid>
+                <DataGrid ItemsSource="{Binding PanelDt}"></DataGrid>
             </GroupBox>
         </Grid>
         
