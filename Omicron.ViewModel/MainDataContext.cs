@@ -530,7 +530,7 @@ namespace Omicron.ViewModel
                             _CA9SQLDATA.BLDATE = item[0].ToString();
                             _CA9SQLDATA.BLID = item[1].ToString();
                             _CA9SQLDATA.BLNAME = item[2].ToString();
-                            _CA9SQLDATA.BLUID = item[3].ToString();
+                            _CA9SQLDATA.BLUID = item[3].ToString(); 
                             _CA9SQLDATA.BLMID = item[4].ToString();
                             _CA9SQLDATA.Bar = item[5].ToString();
                             if (isdelete)

@@ -28,7 +28,7 @@
             <StackPanel Style="{StaticResource ParameterHorizontalStackPanel}">
                 <TextBlock Style="{StaticResource TextBlockParameterName}" Width="120">记录保存路径:</TextBlock>
                 <TextBox Style="{StaticResource TextBoxPath}" Text="{Binding BarcodeRecordSaveFolderPath}"></TextBox>
-                <Button Content="打开" Style="{StaticResource ParameterButton}" Command="{mvvm:ActionAutoWithParam Selectfile}" CommandParameter="2"></Button>
+                <Button Content="打开" IsEnabled="{Binding isLogin}" Style="{StaticResource ParameterButton}" Command="{mvvm:ActionAutoWithParam Selectfile}" CommandParameter="2"></Button>
             </StackPanel>
             <StackPanel HorizontalAlignment="Right" Grid.Column="1" Style="{StaticResource ParameterHorizontalStackPanel}">
                 <TextBlock Style="{StaticResource TextBlockParameterName}" Width="100">上一次重传</TextBlock>
