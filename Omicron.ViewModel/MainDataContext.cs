@@ -17,6 +17,7 @@ using System.IO.Ports;
 using 臻鼎科技OraDB;
 using Omicron.Model;
 using System.Data;
+using System.Windows.Threading;
 
 namespace Omicron.ViewModel
 {
@@ -33,9 +34,11 @@ namespace Omicron.ViewModel
         public virtual string Msg { set; get; } = "";
         private MessagePrint messagePrint = new MessagePrint();
         private dialog mydialog = new dialog();
-
+        public virtual string LastReUpdateStr { set; get; }
 
         public virtual ObservableCollection<CA9SQLDATA> BarcodeRecord { set; get; } = new ObservableCollection<CA9SQLDATA>();
+        
+        Queue<CA9SQLDATA> _BarcodeRecord = new Queue<CA9SQLDATA>();
 
         public virtual HImage hImage { set; get; }
         public virtual ObservableCollection<HObject> hObjectList { set; get; }
@@ -88,6 +91,8 @@ namespace Omicron.ViewModel
 
         public virtual ushort SQLReUpdateCount { set; get; } = 0;
 
+        public static DispatcherTimer dispatcherTimer = new DispatcherTimer();
+
         #endregion
         #region 变量
         private HdevEngine hdevEngine = new HdevEngine();
@@ -111,6 +116,7 @@ namespace Omicron.ViewModel
         private string Position12 = "M216";
         static string[] arrField = new string[1];
         static string[] arrValue = new string[1];
+        private DateTimeUtility.SYSTEMTIME lastReUpdate = new DateTimeUtility.SYSTEMTIME();
         #endregion
         #region 构造函数
         public MainDataContext()
@@ -118,6 +124,9 @@ namespace Omicron.ViewModel
             //td.ReConnectUp += ReConnectUpEventHandle;
            
             Scan.StateChanged += Scan_StateChanged;
+            dispatcherTimer.Tick += new EventHandler(DispatcherTimerTickUpdateUi);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
+            dispatcherTimer.Start();
             try
             {
                 ScanPortName = Inifile.INIGetStringValue(iniParameterPath, "SerialPort", "ScanCom", "COM1");
@@ -142,6 +151,34 @@ namespace Omicron.ViewModel
         private void Scan_StateChanged(object sender, EventArgs e)
         {
             IsScanConnect = Scan.State;
+        }
+        private void DispatcherTimerTickUpdateUi(Object sender, EventArgs e)
+        {
+            if (_BarcodeRecord.Count > 0)
+            {
+                lock (this)
+                {
+                    foreach (CA9SQLDATA item in _BarcodeRecord)
+                    {
+                        BarcodeRecord.Add(item);
+                    }
+                    _BarcodeRecord.Clear();
+                }
+            }
+
+            DateTimeUtility.SYSTEMTIME ds1 = new DateTimeUtility.SYSTEMTIME();
+            DateTimeUtility.GetLocalTime(ref ds1);
+            TimeSpan ts1 = ds1.ToDateTime() - lastReUpdate.ToDateTime();
+            if (ts1.TotalHours > 4)
+            {
+                string filepath2 = BarcodeRecordSaveFolderPath + @"\" + "NotUpdate" + ".csv";
+                ReUpdateBar(filepath2, false);
+
+
+                DateTimeUtility.GetLocalTime(ref lastReUpdate);
+                SaveLastSamplTimetoIni();
+                LastReUpdateStr = lastReUpdate.ToDateTime().ToString();
+            }
         }
         #endregion
         #region 画面切换
@@ -320,42 +357,18 @@ namespace Omicron.ViewModel
                     if (dlg1.ShowDialog() == DialogResult.OK)
                     {
                         string csvFileName = dlg1.FileName;
+
                         
-                        DataTable dt = new DataTable();
-                        DataTable dt1;
-                        dt.Columns.Add("BLDATE", typeof(string));
-                        dt.Columns.Add("BLID", typeof(string));
-                        dt.Columns.Add("BLNAME", typeof(string));
-                        dt.Columns.Add("BLUID", typeof(string));
-                        dt.Columns.Add("BLMID", typeof(string));
-                        dt.Columns.Add("Bar", typeof(string));
-                        try
+                        if (csvFileName == BarcodeRecordSaveFolderPath + @"\" + "NotUpdate" + ".csv")
                         {
-                            if (File.Exists(csvFileName))
-                            {
-                                dt1 = Csvfile.csv2dt(csvFileName, 1, dt);
-                                if (dt1.Rows.Count > 0)
-                                {
-                                    SQLReUpdateCount = 0;
-                                    foreach (DataRow item in dt1.Rows)
-                                    {
-                                        CA9SQLDATA _CA9SQLDATA = new CA9SQLDATA();
-                                        _CA9SQLDATA.BLDATE = item[0].ToString();
-                                        _CA9SQLDATA.BLID = item[1].ToString();
-                                        _CA9SQLDATA.BLNAME = item[2].ToString();
-                                        _CA9SQLDATA.BLUID = item[3].ToString();
-                                        _CA9SQLDATA.BLMID = item[4].ToString();
-                                        _CA9SQLDATA.Bar = item[5].ToString();
-                                        LookforDt(_CA9SQLDATA);
-                                        SQLReUpdateCount++;
-                                    }
-                                    Msg = messagePrint.AddMessage("重传记录完成");
-                                }
-                            }
+                            ReUpdateBar(csvFileName, false);
+                            DateTimeUtility.GetLocalTime(ref lastReUpdate);
+                            SaveLastSamplTimetoIni();
+                            LastReUpdateStr = lastReUpdate.ToDateTime().ToString();
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            Log.Default.Error("重传记录", ex.Message);
+                            ReUpdateBar(csvFileName, true);
                         }
                     }
                     dlg1.Dispose();
@@ -437,11 +450,24 @@ namespace Omicron.ViewModel
                 cA9SQLDATA.Bar = BarcodeString.ToUpper();
                 LookforDt(cA9SQLDATA);
             }
-                
+
         }
-        private void SaveCSVfileRecord(CA9SQLDATA tr)
+        private void SaveCSVfileRecord(CA9SQLDATA tr, bool flag)
         {
-            string filepath = BarcodeRecordSaveFolderPath + "\\" + DateTime.Now.ToLongDateString().ToString() + ".csv";
+            string filepath = "";
+            if (flag)
+            {
+                if (!Directory.Exists(BarcodeRecordSaveFolderPath + @"\" + DateTime.Now.ToLongDateString().ToString()))
+                {
+                    Directory.CreateDirectory(BarcodeRecordSaveFolderPath + @"\" + DateTime.Now.ToLongDateString().ToString());
+                }
+                filepath = BarcodeRecordSaveFolderPath + @"\" + DateTime.Now.ToLongDateString().ToString()  + @"\" + DateTime.Now.ToLongDateString().ToString() + ".csv";
+            }
+            else
+            {
+                filepath = BarcodeRecordSaveFolderPath + @"\" + "NotUpdate" + ".csv";
+            }
+            //filepath = BarcodeRecordSaveFolderPath + "\\" + DateTime.Now.ToLongDateString().ToString() + ".csv";
             try
             {
 
@@ -459,7 +485,89 @@ namespace Omicron.ViewModel
                 Log.Default.Error("写入CSV文件失败", ex.Message);
             }
         }
+        private void SaveLastSamplTimetoIni()
+        {
+            try
+            {
+                Inifile.INIWriteValue(iniParameterPath, "ReUpdate", "wDay", lastReUpdate.wDay.ToString());
+                Inifile.INIWriteValue(iniParameterPath, "ReUpdate", "wDayOfWeek", lastReUpdate.wDayOfWeek.ToString());
+                Inifile.INIWriteValue(iniParameterPath, "ReUpdate", "wHour", lastReUpdate.wHour.ToString());
+                Inifile.INIWriteValue(iniParameterPath, "ReUpdate", "wMilliseconds", lastReUpdate.wMilliseconds.ToString());
+                Inifile.INIWriteValue(iniParameterPath, "ReUpdate", "wMinute", lastReUpdate.wMinute.ToString());
+                Inifile.INIWriteValue(iniParameterPath, "ReUpdate", "wMonth", lastReUpdate.wMonth.ToString());
+                Inifile.INIWriteValue(iniParameterPath, "ReUpdate", "wSecond", lastReUpdate.wSecond.ToString());
+                Inifile.INIWriteValue(iniParameterPath, "ReUpdate", "wYear", lastReUpdate.wYear.ToString());
 
+            }
+            catch (Exception ex)
+            {
+
+                Log.Default.Error("SaveLastSamplTimetoIni", ex);
+            }
+        }
+        private void ReUpdateBar(string csvFileName, bool isdelete)
+        {
+            DataTable dt = new DataTable();
+            DataTable dt1;
+            Queue<CA9SQLDATA> FailCA9SQLDATA = new Queue<CA9SQLDATA>();
+            dt.Columns.Add("BLDATE", typeof(string));
+            dt.Columns.Add("BLID", typeof(string));
+            dt.Columns.Add("BLNAME", typeof(string));
+            dt.Columns.Add("BLUID", typeof(string));
+            dt.Columns.Add("BLMID", typeof(string));
+            dt.Columns.Add("Bar", typeof(string));
+            try
+            {
+                if (File.Exists(csvFileName))
+                {
+                    dt1 = Csvfile.csv2dt(csvFileName, 1, dt);
+                    if (dt1.Rows.Count > 0)
+                    {
+                        SQLReUpdateCount = 0;
+                        foreach (DataRow item in dt1.Rows)
+                        {
+                            CA9SQLDATA _CA9SQLDATA = new CA9SQLDATA();
+                            _CA9SQLDATA.BLDATE = item[0].ToString();
+                            _CA9SQLDATA.BLID = item[1].ToString();
+                            _CA9SQLDATA.BLNAME = item[2].ToString();
+                            _CA9SQLDATA.BLUID = item[3].ToString();
+                            _CA9SQLDATA.BLMID = item[4].ToString();
+                            _CA9SQLDATA.Bar = item[5].ToString();
+                            if (isdelete)
+                            {
+                                LookforDt(_CA9SQLDATA);
+                                SQLReUpdateCount++;
+                            }
+                            else
+                            {
+                                if (LookforDt(_CA9SQLDATA))
+                                {
+                                    SaveCSVfileRecord(_CA9SQLDATA, true);
+                                    SQLReUpdateCount++;
+                                }
+                                else
+                                {
+                                    FailCA9SQLDATA.Enqueue(_CA9SQLDATA);
+                                }
+                            }                                                     
+                        }
+                        if (!isdelete)
+                        {
+                            File.Delete(csvFileName);
+                            foreach (CA9SQLDATA item in FailCA9SQLDATA)
+                            {
+                                SaveCSVfileRecord(item, false);
+                            }
+                        }
+                        Msg = messagePrint.AddMessage("重传记录完成");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Default.Error("重传记录", ex.Message);
+            }
+        }
         #region 数据库操作
         private void setLocalTime(string strDateTime)
         {
@@ -575,7 +683,8 @@ namespace Omicron.ViewModel
             {
                 Msg = messagePrint.AddMessage("读取参数失败");
             }
-            string filepath = BarcodeRecordSaveFolderPath + "\\" + DateTime.Now.ToLongDateString().ToString() + ".csv";
+            string filepath1 = BarcodeRecordSaveFolderPath + @"\" + DateTime.Now.ToLongDateString().ToString() + @"\" + DateTime.Now.ToLongDateString().ToString() + ".csv";
+            //string filepath2 = BarcodeRecordSaveFolderPath + @"\" + "NotUpdate" + ".csv";
             DataTable dt = new DataTable();
             DataTable dt1;
             dt.Columns.Add("BLDATE", typeof(string));
@@ -586,9 +695,9 @@ namespace Omicron.ViewModel
             dt.Columns.Add("Bar", typeof(string));
             try
             {
-                if (File.Exists(filepath))
+                if (File.Exists(filepath1))
                 {
-                    dt1 = Csvfile.csv2dt(filepath, 1, dt);
+                    dt1 = Csvfile.csv2dt(filepath1, 1, dt);
                     if (dt1.Rows.Count > 0)
                     {
                         foreach (DataRow item in dt1.Rows)
@@ -600,7 +709,10 @@ namespace Omicron.ViewModel
                             _CA9SQLDATA.BLUID = item[3].ToString();
                             _CA9SQLDATA.BLMID = item[4].ToString();
                             _CA9SQLDATA.Bar = item[5].ToString();
-                            BarcodeRecord.Add(_CA9SQLDATA);                           
+                            lock (this)
+                            {
+                                _BarcodeRecord.Enqueue(_CA9SQLDATA);
+                            }
                         }
                         Msg = messagePrint.AddMessage("读取记录完成");
                     }
@@ -637,6 +749,15 @@ namespace Omicron.ViewModel
                 SQL_ora_user = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "User", "sfcabar");
                 SQL_ora_pwd = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "Passwold", "sfcabar*168");
                 BarcodeRecordSaveFolderPath = Inifile.INIGetStringValue(iniParameterPath, "SavePath", "BarcodeRecordSaveFolderPath", "C:\\");
+                lastReUpdate.wDay = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wDay", "13"));
+                lastReUpdate.wDayOfWeek = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wDayOfWeek", "0"));
+                lastReUpdate.wHour = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wHour", "17"));
+                lastReUpdate.wMilliseconds = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wMilliseconds", "273"));
+                lastReUpdate.wMinute = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wMinute", "5"));
+                lastReUpdate.wMonth = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wMonth", "11"));
+                lastReUpdate.wSecond = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wSecond", "55"));
+                lastReUpdate.wYear = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wYear", "2016"));
+                LastReUpdateStr = lastReUpdate.ToDateTime().ToString();
                 return true;
             }
             catch (Exception ex)
@@ -899,20 +1020,36 @@ namespace Omicron.ViewModel
             else
             {
                 td.SetM(ModbusState, "M196", true);
+                CA9SQLDATA cA9SQLDATA = new CA9SQLDATA();
+                cA9SQLDATA.BLDATE = DateTime.Now.ToString();
+                cA9SQLDATA.BLID = BLID.ToUpper();
+                cA9SQLDATA.BLNAME = BLNAME.ToUpper();
+                cA9SQLDATA.BLUID = BLUID.ToUpper();
+                cA9SQLDATA.BLMID = BLMID.ToUpper();
+                cA9SQLDATA.Bar = BarcodeString.ToUpper();
+                
+                lock (this)
+                {
+                    _BarcodeRecord.Enqueue(cA9SQLDATA);
+                }
                 if (BarcodeString.Length > 7)
                 {
-                    CA9SQLDATA cA9SQLDATA = new CA9SQLDATA();
-                    cA9SQLDATA.BLDATE = DateTime.Now.ToString();
-                    cA9SQLDATA.BLID = BLID.ToUpper();
-                    cA9SQLDATA.BLNAME = BLNAME.ToUpper();
-                    cA9SQLDATA.BLUID = BLUID.ToUpper();
-                    cA9SQLDATA.BLMID = BLMID.ToUpper();
-                    cA9SQLDATA.Bar = BarcodeString.ToUpper();
-                    BarcodeRecord.Add(cA9SQLDATA);
-                    SaveCSVfileRecord(cA9SQLDATA);
-                    LookforDt(cA9SQLDATA);
-                    
-
+                    try
+                    {
+                        if (LookforDt(cA9SQLDATA))
+                        {
+                            SaveCSVfileRecord(cA9SQLDATA, true);
+                        }
+                        else
+                        {
+                            SaveCSVfileRecord(cA9SQLDATA, false);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        SaveCSVfileRecord(cA9SQLDATA, false);
+                        Log.Default.Error("LookforDt_PLC", ex.Message); 
+                    }
                 }
             }
         }

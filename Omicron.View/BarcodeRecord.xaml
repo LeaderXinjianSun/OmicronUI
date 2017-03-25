@@ -22,7 +22,7 @@
         <DataGrid ItemsSource="{Binding BarcodeRecord}" AutoGenerateColumns="True"></DataGrid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <StackPanel Style="{StaticResource ParameterHorizontalStackPanel}">
@@ -31,6 +31,8 @@
                 <Button Content="打开" Style="{StaticResource ParameterButton}" Command="{mvvm:ActionAutoWithParam Selectfile}" CommandParameter="2"></Button>
             </StackPanel>
             <StackPanel HorizontalAlignment="Right" Grid.Column="1" Style="{StaticResource ParameterHorizontalStackPanel}">
+                <TextBlock Style="{StaticResource TextBlockParameterName}" Width="100">上一次重传</TextBlock>
+                <TextBlock Style="{StaticResource TextBlockParameterName}" Width="200" Text="{Binding LastReUpdateStr}"></TextBlock>
                 <TextBlock Style="{StaticResource TextBlockParameterName}" Text="{Binding SQLReUpdateCount}"></TextBlock>
                 <Button Content="重传" Style="{StaticResource ParameterButton}" Command="{mvvm:ActionAutoWithParam Selectfile}" CommandParameter="3"></Button>
             </StackPanel>
