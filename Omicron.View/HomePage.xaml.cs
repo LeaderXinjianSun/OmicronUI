@@ -52,7 +52,7 @@ namespace Omicron.View
             this.TextBox3.IsReadOnly = true;
             try
             {
-                Inifile.INIWriteValue(iniParameterPath, "SQLMSG", "BLMID", TextBox2.Text); 
+                Inifile.INIWriteValue(iniParameterPath, "SQLMSG", "BLMID", TextBox3.Text); 
             }
             catch
             {
@@ -77,7 +77,7 @@ namespace Omicron.View
             this.TextBox2.IsReadOnly = true;
             try
             {
-                Inifile.INIWriteValue(iniParameterPath, "SQLMSG", "BLUID", TextBox3.Text);
+                Inifile.INIWriteValue(iniParameterPath, "SQLMSG", "BLUID", TextBox2.Text);
             }
             catch
             {

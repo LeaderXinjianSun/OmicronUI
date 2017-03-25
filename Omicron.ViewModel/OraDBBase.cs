@@ -576,6 +576,34 @@ namespace 臻鼎科技OraDB
             strSQL += str2.Substring(0, str2.Length - 5);
             return strSQL;
         }
+        public static string getUpdateString2(string strTable, string[,] arrFieldAndNewValue, string[,] arrFieldAndOldValue)
+        {
+            string strSQL = string.Empty;
+            string str1 = "", str2 = "";
+            str1 = "update " + strTable + " set ";
+            for (int i = 0; i < arrFieldAndNewValue.GetLength(0); i++)
+            {
+                if (arrFieldAndNewValue[i, 0] == "BLDATE")
+                {
+                    str1 += string.Format("{0}= {1},", arrFieldAndNewValue[i, 0], arrFieldAndNewValue[i, 1]);
+                }
+                else
+                {
+                    str1 += string.Format("{0}= '{1}',", arrFieldAndNewValue[i, 0], arrFieldAndNewValue[i, 1]);
+                }
+                
+            }
+
+            str2 = " where ";
+            for (int i = 0; i < arrFieldAndOldValue.GetLength(0); i++)
+            {
+                str2 += string.Format("{0}= '{1}' and ", arrFieldAndOldValue[i, 0], arrFieldAndOldValue[i, 1]);
+            }
+
+            strSQL += str1.Substring(0, str1.Length - 1);
+            strSQL += str2.Substring(0, str2.Length - 5);
+            return strSQL;
+        }
 
         public static string getUpdateString(string strTable, string[,] arrFieldAndNewValue)
         {
@@ -607,6 +635,10 @@ namespace 臻鼎科技OraDB
         public int updateSQL1(string strTable, string[,] arrFieldAndNewValue, string[,] arrFieldAndOldValue)
         {
             return executeNonQuery(getUpdateString1(strTable, arrFieldAndNewValue, arrFieldAndOldValue));
+        }
+        public int updateSQL2(string strTable, string[,] arrFieldAndNewValue, string[,] arrFieldAndOldValue)
+        {
+            return executeNonQuery(getUpdateString2(strTable, arrFieldAndNewValue, arrFieldAndOldValue));
         }
 
         public int updateSQL(string strTable, string[,] arrFieldAndNewValue)

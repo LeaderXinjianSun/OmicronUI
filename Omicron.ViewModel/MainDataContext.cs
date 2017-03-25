@@ -29,9 +29,13 @@ namespace Omicron.ViewModel
         //ParameterPageVisibility
         public virtual string ParameterPageVisibility { set; get; } = "Collapsed";
         public virtual string ScanOperatePageVisibility { set; get; } = "Collapsed";
+        public virtual string BarcodeRecordVisibility { set; get; } = "Collapsed";
         public virtual string Msg { set; get; } = "";
         private MessagePrint messagePrint = new MessagePrint();
         private dialog mydialog = new dialog();
+
+
+        public virtual ObservableCollection<CA9SQLDATA> BarcodeRecord { set; get; } = new ObservableCollection<CA9SQLDATA>();
 
         public virtual HImage hImage { set; get; }
         public virtual ObservableCollection<HObject> hObjectList { set; get; }
@@ -71,7 +75,7 @@ namespace Omicron.ViewModel
         public virtual bool IsScanConnect { set; get; }
         public virtual bool IsTCPConnect { set; get; }
 
-        public virtual string BarcodeString { set; get; } = "C466023HV1AG580AF-KPS";
+        public virtual string BarcodeString { set; get; } = "G5Y709504KWHP195YZM3";
 
         public virtual string SQL_ora_server { set; get; }
         public virtual string SQL_ora_user { set; get; }
@@ -79,6 +83,10 @@ namespace Omicron.ViewModel
 
         public virtual DataTable PanelDt { set; get; }
         public virtual DataTable SinglDt { set; get; }
+
+        public virtual string BarcodeRecordSaveFolderPath { set; get; }
+
+        public virtual ushort SQLReUpdateCount { set; get; } = 0;
 
         #endregion
         #region 变量
@@ -108,7 +116,7 @@ namespace Omicron.ViewModel
         public MainDataContext()
         {
             //td.ReConnectUp += ReConnectUpEventHandle;
-
+           
             Scan.StateChanged += Scan_StateChanged;
             try
             {
@@ -143,6 +151,7 @@ namespace Omicron.ViewModel
             HomePageVisibility = "Visible";
             ParameterPageVisibility = "Collapsed";
             ScanOperatePageVisibility = "Collapsed";
+            BarcodeRecordVisibility = "Collapsed";
             //Msg = messagePrint.AddMessage("Selected HomePage");
             isLogin = false;
             LoginButtonString = "登录";
@@ -153,6 +162,7 @@ namespace Omicron.ViewModel
             HomePageVisibility = "Collapsed";
             ParameterPageVisibility = "Collapsed";
             ScanOperatePageVisibility = "Visible";
+            BarcodeRecordVisibility = "Collapsed";
             //Msg = messagePrint.AddMessage("Selected HomePage");
             isLogin = false;
             LoginButtonString = "登录";
@@ -163,6 +173,17 @@ namespace Omicron.ViewModel
             HomePageVisibility = "Collapsed";
             ParameterPageVisibility = "Collapsed";
             ScanOperatePageVisibility = "Collapsed";
+            BarcodeRecordVisibility = "Collapsed";
+            isLogin = false;
+            LoginButtonString = "登录";
+        }
+        public void ChoseBarcodeRecord()
+        {
+            AboutPageVisibility = "Collapsed";
+            HomePageVisibility = "Collapsed";
+            ParameterPageVisibility = "Collapsed";
+            ScanOperatePageVisibility = "Collapsed";
+            BarcodeRecordVisibility = "Visible";
             isLogin = false;
             LoginButtonString = "登录";
         }
@@ -172,6 +193,7 @@ namespace Omicron.ViewModel
             HomePageVisibility = "Collapsed";
             ParameterPageVisibility = "Visible";
             ScanOperatePageVisibility = "Collapsed";
+            BarcodeRecordVisibility = "Collapsed";
         }
         #endregion
         #region Halcon
@@ -220,12 +242,12 @@ namespace Omicron.ViewModel
             var fill11 = hdevEngine.getmeasurements("fill11");
             var fill12 = hdevEngine.getmeasurements("fill12");
 
-            FindFill1 =  (fill7.ToString() == "0");
-            FindFill2 =  (fill8.ToString() == "0");
-            FindFill3 =  (fill9.ToString() == "0");
-            FindFill4 =  (fill10.ToString() == "0");
-            FindFill5 =  (fill11.ToString() == "0");
-            FindFill6 =  (fill12.ToString() == "0");
+            FindFill1 =  (fill1.ToString() == "0");
+            FindFill2 =  (fill2.ToString() == "0");
+            FindFill3 =  (fill3.ToString() == "0");
+            FindFill4 =  (fill4.ToString() == "0");
+            FindFill5 =  (fill5.ToString() == "0");
+            FindFill6 =  (fill6.ToString() == "0");
 
             var mo1 = hdevEngine.getmeasurements("mo1");
             var mo2 = hdevEngine.getmeasurements("mo2");
@@ -234,12 +256,12 @@ namespace Omicron.ViewModel
             var mo5 = hdevEngine.getmeasurements("mo5");
             var mo6 = hdevEngine.getmeasurements("mo6");
 
-            FindMo1 = mo1.ToString() == "1" | fill1.ToString() == "0";
-            FindMo2 = mo2.ToString() == "1" | fill2.ToString() == "0";
-            FindMo3 = mo3.ToString() == "1" | fill3.ToString() == "0";
-            FindMo4 = mo4.ToString() == "1" | fill4.ToString() == "0";
-            FindMo5 = mo5.ToString() == "1" | fill5.ToString() == "0";
-            FindMo6 = mo6.ToString() == "1" | fill6.ToString() == "0";
+            FindMo1 = mo1.ToString() == "1";
+            FindMo2 = mo2.ToString() == "1";
+            FindMo3 = mo3.ToString() == "1";
+            FindMo4 = mo4.ToString() == "1";
+            FindMo5 = mo5.ToString() == "1";
+            FindMo6 = mo6.ToString() == "1";
 
             objectList.Add(hdevEngine.getRegion("Regions1"));
             objectList.Add(hdevEngine.getRegion("Regions2"));
@@ -255,12 +277,12 @@ namespace Omicron.ViewModel
             //objectList.Add(hdevEngine.getRegion("Regions_Intensity5"));
             //objectList.Add(hdevEngine.getRegion("Regions_Intensity6"));
 
-            objectList.Add(hdevEngine.getRegion("Regions_Intensity7"));
-            objectList.Add(hdevEngine.getRegion("Regions_Intensity8"));
-            objectList.Add(hdevEngine.getRegion("Regions_Intensity9"));
-            objectList.Add(hdevEngine.getRegion("Regions_Intensity10"));
-            objectList.Add(hdevEngine.getRegion("Regions_Intensity11"));
-            objectList.Add(hdevEngine.getRegion("Regions_Intensity12"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity7"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity8"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity9"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity10"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity11"));
+            //objectList.Add(hdevEngine.getRegion("Regions_Intensity12"));
             hObjectList = objectList;
         }
 
@@ -269,23 +291,81 @@ namespace Omicron.ViewModel
         public void Selectfile(object p)
         {
 
-            OpenFileDialog dlg = new OpenFileDialog();
+            
             switch (p.ToString())
             {
                 case "1":
+                    OpenFileDialog dlg = new OpenFileDialog();
                     dlg.Filter = "视觉文件(*.hdev)|*.hdev|所有文件(*.*)|*.*";
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         HcVisionScriptFileName = dlg.FileName;
                         Inifile.INIWriteValue(iniParameterPath, "Camera", "HcVisionScriptFileName", HcVisionScriptFileName);
                     }
+                    dlg.Dispose();
+                    break;
+                case "2":
+                    FolderBrowserDialog dlgf = new FolderBrowserDialog();
+                    dlgf.Description = "请选择文件路径";
+                    if (dlgf.ShowDialog() == DialogResult.OK)
+                    {
+                        BarcodeRecordSaveFolderPath = dlgf.SelectedPath;
+                        Inifile.INIWriteValue(iniParameterPath, "SavePath", "BarcodeRecordSaveFolderPath", BarcodeRecordSaveFolderPath);
+                    }
+                    dlgf.Dispose();
+                    break;
+                case "3":
+                    OpenFileDialog dlg1 = new OpenFileDialog();
+                    dlg1.Filter = "记录文件(*.csv)|*.csv|所有文件(*.*)|*.*";
+                    if (dlg1.ShowDialog() == DialogResult.OK)
+                    {
+                        string csvFileName = dlg1.FileName;
+                        
+                        DataTable dt = new DataTable();
+                        DataTable dt1;
+                        dt.Columns.Add("BLDATE", typeof(string));
+                        dt.Columns.Add("BLID", typeof(string));
+                        dt.Columns.Add("BLNAME", typeof(string));
+                        dt.Columns.Add("BLUID", typeof(string));
+                        dt.Columns.Add("BLMID", typeof(string));
+                        dt.Columns.Add("Bar", typeof(string));
+                        try
+                        {
+                            if (File.Exists(csvFileName))
+                            {
+                                dt1 = Csvfile.csv2dt(csvFileName, 1, dt);
+                                if (dt1.Rows.Count > 0)
+                                {
+                                    SQLReUpdateCount = 0;
+                                    foreach (DataRow item in dt1.Rows)
+                                    {
+                                        CA9SQLDATA _CA9SQLDATA = new CA9SQLDATA();
+                                        _CA9SQLDATA.BLDATE = item[0].ToString();
+                                        _CA9SQLDATA.BLID = item[1].ToString();
+                                        _CA9SQLDATA.BLNAME = item[2].ToString();
+                                        _CA9SQLDATA.BLUID = item[3].ToString();
+                                        _CA9SQLDATA.BLMID = item[4].ToString();
+                                        _CA9SQLDATA.Bar = item[5].ToString();
+                                        LookforDt(_CA9SQLDATA);
+                                        SQLReUpdateCount++;
+                                    }
+                                    Msg = messagePrint.AddMessage("重传记录完成");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Default.Error("重传记录", ex.Message);
+                        }
+                    }
+                    dlg1.Dispose();
                     break;
                 default:
                     break;
             }
             //dlg.InitialDirectory = System.Environment.CurrentDirectory;
 
-            dlg.Dispose();
+            
         }
         public void SaveParameter()
         {
@@ -344,14 +424,42 @@ namespace Omicron.ViewModel
 
         public void SearchAction()
         {
-            //ConnectDBTest();
             if (BarcodeString.Length > 7)
             {
-                LookforDt(BarcodeString);
-            }
-            //string s = DateTime.Now.ToString();
+                CA9SQLDATA cA9SQLDATA = new CA9SQLDATA();
+                cA9SQLDATA.BLDATE = DateTime.Now.ToString();
 
+
+                cA9SQLDATA.BLID = BLID.ToUpper();
+                cA9SQLDATA.BLNAME = BLNAME.ToUpper();
+                cA9SQLDATA.BLUID = BLUID.ToUpper();
+                cA9SQLDATA.BLMID = BLMID.ToUpper();
+                cA9SQLDATA.Bar = BarcodeString.ToUpper();
+                LookforDt(cA9SQLDATA);
+            }
+                
         }
+        private void SaveCSVfileRecord(CA9SQLDATA tr)
+        {
+            string filepath = BarcodeRecordSaveFolderPath + "\\" + DateTime.Now.ToLongDateString().ToString() + ".csv";
+            try
+            {
+
+                if (!File.Exists(filepath))
+                {
+                    string[] heads = { "BLDATE", "BLID", "BLNAME", "BLUID", "BLMID" , "Bar" };
+                    Csvfile.savetocsv(filepath, heads);
+                }
+                string[] conte = { tr.BLDATE, tr.BLID, tr.BLNAME, tr.BLUID, tr.BLMID,tr.Bar };
+                Csvfile.savetocsv(filepath, conte);
+            }
+            catch (Exception ex)
+            {
+                Msg = messagePrint.AddMessage("写入CSV文件失败");
+                Log.Default.Error("写入CSV文件失败", ex.Message);
+            }
+        }
+
         #region 数据库操作
         private void setLocalTime(string strDateTime)
         {
@@ -387,42 +495,42 @@ namespace Omicron.ViewModel
                 IsTCPConnect = false;
             }
         }
-        private bool LookforDt(string barcode)
+        private bool LookforDt(CA9SQLDATA cA9SQLDATA)
         {
-            
+
             try
             {
                 OraDB oraDB = new OraDB(SQL_ora_server, SQL_ora_user, SQL_ora_pwd);
-                CA9SQLDATA cA9SQLDATA = new CA9SQLDATA();
-                cA9SQLDATA.BLDATE = DateTime.Now.ToString();
+                //CA9SQLDATA cA9SQLDATA = new CA9SQLDATA();
+                //cA9SQLDATA.BLDATE = DateTime.Now.ToString();
 
-                cA9SQLDATA.BLID = BLID.ToUpper();
-                cA9SQLDATA.BLNAME = BLNAME.ToUpper();
-                cA9SQLDATA.BLUID = BLUID.ToUpper();
-                cA9SQLDATA.BLMID = BLMID.ToUpper();
+
+                //cA9SQLDATA.BLID = BLID.ToUpper();
+                //cA9SQLDATA.BLNAME = BLNAME.ToUpper();
+                //cA9SQLDATA.BLUID = BLUID.ToUpper();
+                //cA9SQLDATA.BLMID = BLMID.ToUpper();
                 string tablename = "sfcdata.barautbind";
                 if (oraDB.isConnect())
                 {
                     IsTCPConnect = true;
                     arrField[0] = "SCBARCODE";
-                    arrValue[0] = barcode.ToUpper();
+                    arrValue[0] = cA9SQLDATA.Bar;
                     
                     DataSet s = oraDB.selectSQL(tablename.ToUpper(), arrField, arrValue);
                     SinglDt = s.Tables[0];
                     if (SinglDt.Rows.Count == 0)
                     {
-                        Msg = messagePrint.AddMessage("未查询到 " + barcode + " 信息");
+                        Msg = messagePrint.AddMessage("未查询到 " + cA9SQLDATA.Bar + " 信息");
                         oraDB.disconnect();
                         return false;
                     }
                     else
                     {
                         string panelbar = (string)SinglDt.Rows[0]["SCPNLBAR"];
-                        //string[,] arrFieldAndNewValue = { { "BLDATE", cA9SQLDATA.BLDATE }, { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
-                        string[,] arrFieldAndNewValue = { { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
-                        //string[,] arrFieldAndNewValue = { { "BLDATE", "TO_DATE('2007-06-12 10:00:00','YYYY-MM-DD HH24:MI:SS')" }, { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
+                        string[,] arrFieldAndNewValue = { { "BLDATE", ("to_date('" + cA9SQLDATA.BLDATE + "', 'yyyy/mm/dd hh24:mi:ss')").ToUpper() }, { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
+                        
                         string[,] arrFieldAndOldValue = { { "SCPNLBAR", panelbar } };
-                        oraDB.updateSQL(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
+                        oraDB.updateSQL2(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
                         Msg = messagePrint.AddMessage("数据更新完成");
                         arrField[0] = "SCPNLBAR";
                         arrValue[0] = panelbar.ToUpper();
@@ -467,6 +575,41 @@ namespace Omicron.ViewModel
             {
                 Msg = messagePrint.AddMessage("读取参数失败");
             }
+            string filepath = BarcodeRecordSaveFolderPath + "\\" + DateTime.Now.ToLongDateString().ToString() + ".csv";
+            DataTable dt = new DataTable();
+            DataTable dt1;
+            dt.Columns.Add("BLDATE", typeof(string));
+            dt.Columns.Add("BLID", typeof(string));
+            dt.Columns.Add("BLNAME", typeof(string));
+            dt.Columns.Add("BLUID", typeof(string));
+            dt.Columns.Add("BLMID", typeof(string));
+            dt.Columns.Add("Bar", typeof(string));
+            try
+            {
+                if (File.Exists(filepath))
+                {
+                    dt1 = Csvfile.csv2dt(filepath, 1, dt);
+                    if (dt1.Rows.Count > 0)
+                    {
+                        foreach (DataRow item in dt1.Rows)
+                        {
+                            CA9SQLDATA _CA9SQLDATA = new CA9SQLDATA();
+                            _CA9SQLDATA.BLDATE = item[0].ToString();
+                            _CA9SQLDATA.BLID = item[1].ToString();
+                            _CA9SQLDATA.BLNAME = item[2].ToString();
+                            _CA9SQLDATA.BLUID = item[3].ToString();
+                            _CA9SQLDATA.BLMID = item[4].ToString();
+                            _CA9SQLDATA.Bar = item[5].ToString();
+                            BarcodeRecord.Add(_CA9SQLDATA);                           
+                        }
+                        Msg = messagePrint.AddMessage("读取记录完成");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Default.Error("WindowLoadedcsv2dt", ex.Message);
+            }
             cameraHcInit();
             await Task.Delay(100);
             CameraHcInspect();
@@ -493,6 +636,7 @@ namespace Omicron.ViewModel
                 SQL_ora_server = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "Server", "mesdb07");
                 SQL_ora_user = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "User", "sfcabar");
                 SQL_ora_pwd = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "Passwold", "sfcabar*168");
+                BarcodeRecordSaveFolderPath = Inifile.INIGetStringValue(iniParameterPath, "SavePath", "BarcodeRecordSaveFolderPath", "C:\\");
                 return true;
             }
             catch (Exception ex)
@@ -755,16 +899,32 @@ namespace Omicron.ViewModel
             else
             {
                 td.SetM(ModbusState, "M196", true);
+                if (BarcodeString.Length > 7)
+                {
+                    CA9SQLDATA cA9SQLDATA = new CA9SQLDATA();
+                    cA9SQLDATA.BLDATE = DateTime.Now.ToString();
+                    cA9SQLDATA.BLID = BLID.ToUpper();
+                    cA9SQLDATA.BLNAME = BLNAME.ToUpper();
+                    cA9SQLDATA.BLUID = BLUID.ToUpper();
+                    cA9SQLDATA.BLMID = BLMID.ToUpper();
+                    cA9SQLDATA.Bar = BarcodeString.ToUpper();
+                    BarcodeRecord.Add(cA9SQLDATA);
+                    SaveCSVfileRecord(cA9SQLDATA);
+                    LookforDt(cA9SQLDATA);
+                    
+
+                }
             }
         }
         #endregion
     }
-    public struct CA9SQLDATA
+    public class CA9SQLDATA
     {
-        public string BLDATE;   //折线作业时间
-        public string BLID;     //折线治具编号
-        public string BLNAME;   //折线治具名称
-        public string BLUID;    //折线人员
-        public string BLMID;    //折线机台编号
+        public string BLDATE { get; set; }   //折线作业时间
+        public string BLID { get; set; }     //折线治具编号
+        public string BLNAME { get; set; }  //折线治具名称
+        public string BLUID { get; set; }  //折线人员
+        public string BLMID { get; set; }   //折线机台编号
+        public string Bar { get; set; }    //单pcs条码
     }
 }

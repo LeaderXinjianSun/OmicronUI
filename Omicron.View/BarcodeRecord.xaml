@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="Omicron.View.BarcodeRecord"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Omicron.View"
+             xmlns:mvvm="clr-namespace:BingLibrary.hjb;assembly=BingLibrary"
+             mc:Ignorable="d" 
+             d:DesignHeight="768" d:DesignWidth="1024">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/SxjDictionary.xaml"></ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="9*"></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <DataGrid ItemsSource="{Binding BarcodeRecord}" AutoGenerateColumns="True"></DataGrid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <StackPanel Style="{StaticResource ParameterHorizontalStackPanel}">
+                <TextBlock Style="{StaticResource TextBlockParameterName}" Width="120">记录保存路径:</TextBlock>
+                <TextBox Style="{StaticResource TextBoxPath}" Text="{Binding BarcodeRecordSaveFolderPath}"></TextBox>
+                <Button Content="打开" Style="{StaticResource ParameterButton}" Command="{mvvm:ActionAutoWithParam Selectfile}" CommandParameter="2"></Button>
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" Grid.Column="1" Style="{StaticResource ParameterHorizontalStackPanel}">
+                <TextBlock Style="{StaticResource TextBlockParameterName}" Text="{Binding SQLReUpdateCount}"></TextBlock>
+                <Button Content="重传" Style="{StaticResource ParameterButton}" Command="{mvvm:ActionAutoWithParam Selectfile}" CommandParameter="3"></Button>
+            </StackPanel>
+        </Grid>
+        
+    </Grid>
+</UserControl>
