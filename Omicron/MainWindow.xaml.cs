@@ -24,6 +24,7 @@ namespace Omicron
     public partial class MainWindow : MetroWindow
     {
         private dialog mydialog = new dialog();
+        private string iniParameterPath = System.Environment.CurrentDirectory + "\\Parameter.ini";
         public MainWindow()
         {
             InitializeComponent();
@@ -44,6 +45,24 @@ namespace Omicron
             {
                 MainGrid1.Visibility = Visibility.Visible;
                 mydialog.changeaccent("Cobalt");
+            }
+        }
+
+        private async void MetroWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            mydialog.changeaccent("Red");
+            MainGrid1.Visibility = Visibility.Collapsed;
+            string str = await mydialog.showinput("请输入作业员编号");
+            if (str == "")
+            {
+                System.Windows.Application.Current.Shutdown();
+            }
+            else
+            {
+                Inifile.INIWriteValue(iniParameterPath, "SQLMSG", "BLUID", str);
+                Inifile.INIWriteValue(iniParameterPath, "Loaded", "isChangeUserId", "True");
+                mydialog.changeaccent("Cobalt");
+                MainGrid1.Visibility = Visibility.Visible;
             }
         }
     }

@@ -117,6 +117,9 @@ namespace Omicron.ViewModel
         static string[] arrField = new string[1];
         static string[] arrValue = new string[1];
         private DateTimeUtility.SYSTEMTIME lastReUpdate = new DateTimeUtility.SYSTEMTIME();
+        private bool isChangeUserId = false;
+        private bool isChangeUserId1 = false;
+
         #endregion
         #region 构造函数
         public MainDataContext()
@@ -139,6 +142,7 @@ namespace Omicron.ViewModel
                 Msg = messagePrint.AddMessage("扫码枪 连接失败");
 
             }
+            
         }
 
 
@@ -154,6 +158,18 @@ namespace Omicron.ViewModel
         }
         private void DispatcherTimerTickUpdateUi(Object sender, EventArgs e)
         {
+            if (isChangeUserId1 == false)
+            {
+                isChangeUserId = bool.Parse(Inifile.INIGetStringValue(iniParameterPath, "Loaded", "isChangeUserId", "False"));
+            }
+            
+            if (isChangeUserId)
+            {
+                isChangeUserId = false;
+                isChangeUserId1 = true;
+                Inifile.INIWriteValue(iniParameterPath, "Loaded", "isChangeUserId", isChangeUserId.ToString());
+                BLUID = Inifile.INIGetStringValue(iniParameterPath, "SQLMSG", "BLUID", "Null");
+            }
             if (_BarcodeRecord.Count > 0)
             {
                 lock (this)
@@ -179,6 +195,7 @@ namespace Omicron.ViewModel
                 SaveLastSamplTimetoIni();
                 LastReUpdateStr = lastReUpdate.ToDateTime().ToString();
             }
+            
         }
         #endregion
         #region 画面切换
