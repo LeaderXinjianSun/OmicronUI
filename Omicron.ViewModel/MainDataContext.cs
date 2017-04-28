@@ -522,7 +522,7 @@ namespace Omicron.ViewModel
                 Log.Default.Error("SaveLastSamplTimetoIni", ex);
             }
         }
-        private void ReUpdateBar(string csvFileName, bool isdelete)
+        private async void ReUpdateBar(string csvFileName, bool isdelete)
         {
             DataTable dt = new DataTable();
             DataTable dt1;
@@ -533,57 +533,63 @@ namespace Omicron.ViewModel
             dt.Columns.Add("BLUID", typeof(string));
             dt.Columns.Add("BLMID", typeof(string));
             dt.Columns.Add("Bar", typeof(string));
-            try
-            {
-                if (File.Exists(csvFileName))
-                {
-                    dt1 = Csvfile.csv2dt(csvFileName, 1, dt);
-                    if (dt1.Rows.Count > 0)
+            Func<Task> taskFunc = () => {
+                return Task.Run(() => {
+                    try
                     {
-                        SQLReUpdateCount = 0;
-                        foreach (DataRow item in dt1.Rows)
+                        if (File.Exists(csvFileName))
                         {
-                            CA9SQLDATA _CA9SQLDATA = new CA9SQLDATA();
-                            _CA9SQLDATA.BLDATE = item[0].ToString();
-                            _CA9SQLDATA.BLID = item[1].ToString();
-                            _CA9SQLDATA.BLNAME = item[2].ToString();
-                            _CA9SQLDATA.BLUID = item[3].ToString(); 
-                            _CA9SQLDATA.BLMID = item[4].ToString();
-                            _CA9SQLDATA.Bar = item[5].ToString();
-                            if (isdelete)
+                            dt1 = Csvfile.csv2dt(csvFileName, 1, dt);
+                            if (dt1.Rows.Count > 0)
                             {
-                                LookforDt(_CA9SQLDATA);
-                                SQLReUpdateCount++;
-                            }
-                            else
-                            {
-                                if (LookforDt(_CA9SQLDATA))
+                                SQLReUpdateCount = 0;
+                                foreach (DataRow item in dt1.Rows)
                                 {
-                                    SaveCSVfileRecord(_CA9SQLDATA, true);
-                                    SQLReUpdateCount++;
+                                    CA9SQLDATA _CA9SQLDATA = new CA9SQLDATA();
+                                    _CA9SQLDATA.BLDATE = item[0].ToString();
+                                    _CA9SQLDATA.BLID = item[1].ToString();
+                                    _CA9SQLDATA.BLNAME = item[2].ToString();
+                                    _CA9SQLDATA.BLUID = item[3].ToString();
+                                    _CA9SQLDATA.BLMID = item[4].ToString();
+                                    _CA9SQLDATA.Bar = item[5].ToString();
+                                    if (isdelete)
+                                    {
+                                        LookforDt(_CA9SQLDATA);
+                                        SQLReUpdateCount++;
+                                    }
+                                    else
+                                    {
+                                        if (LookforDt(_CA9SQLDATA))
+                                        {
+                                            SaveCSVfileRecord(_CA9SQLDATA, true);
+                                            SQLReUpdateCount++;
+                                        }
+                                        else
+                                        {
+                                            FailCA9SQLDATA.Enqueue(_CA9SQLDATA);
+                                        }
+                                    }
                                 }
-                                else
+                                if (!isdelete)
                                 {
-                                    FailCA9SQLDATA.Enqueue(_CA9SQLDATA);
+                                    File.Delete(csvFileName);
+                                    foreach (CA9SQLDATA item in FailCA9SQLDATA)
+                                    {
+                                        SaveCSVfileRecord(item, false);
+                                    }
                                 }
-                            }                                                     
-                        }
-                        if (!isdelete)
-                        {
-                            File.Delete(csvFileName);
-                            foreach (CA9SQLDATA item in FailCA9SQLDATA)
-                            {
-                                SaveCSVfileRecord(item, false);
+                                Msg = messagePrint.AddMessage("重传记录完成");
                             }
                         }
-                        Msg = messagePrint.AddMessage("重传记录完成");
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Default.Error("重传记录", ex.Message);
-            }
+                    catch (Exception ex)
+                    {
+                        Log.Default.Error("重传记录", ex.Message);
+                    }
+                });
+            };
+            await taskFunc();
+
         }
         #region 数据库操作
         private void setLocalTime(string strDateTime)
