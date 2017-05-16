@@ -357,6 +357,8 @@ namespace BingLibrary.hjb
                     mAddress = m.ToString("X4");
                     break;
 
+
+
                 case "S":
                     mModBus = "05";
                     m = Convert.ToInt32(mAddress);
@@ -456,6 +458,13 @@ namespace BingLibrary.hjb
                         m += 45056;
                     else
                         m += 2048;
+                    mAddress = m.ToString("X4");
+                    break;
+
+                case "T":
+                    mModBus = "01";
+                    m = Convert.ToInt32(mAddress);
+                    m += 1536;
                     mAddress = m.ToString("X4");
                     break;
 

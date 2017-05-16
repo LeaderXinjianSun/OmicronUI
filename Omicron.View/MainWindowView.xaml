@@ -26,6 +26,7 @@
             <MenuItem Header="扫码" Command="{mvvm:ActionAuto ChoseScanOperatePage}"></MenuItem>
             <MenuItem Header="记录" Command="{mvvm:ActionAuto ChoseBarcodeRecord}"></MenuItem>
             <MenuItem Header="参数" IsEnabled="{Binding isLogin}" Command="{mvvm:ActionAuto ChoseParameterPage}"></MenuItem>
+            <MenuItem Header="报警" Command="{mvvm:ActionAuto ChoseAlarmRecodePage}"></MenuItem>
             <MenuItem Header="关于" Command="{mvvm:ActionAuto ChoseAboutPage}"></MenuItem>
             <MenuItem Header="{Binding LoginButtonString}" Command="{mvvm:ActionAuto LoginAction}"></MenuItem>
         </Menu>
@@ -44,6 +45,9 @@
             </Grid>
             <Grid Visibility="{Binding BarcodeRecordVisibility}">
                 <local:BarcodeRecord></local:BarcodeRecord>
+            </Grid>
+            <Grid Visibility="{Binding AlarmRecodePageVisibility}">
+                <local:AlarmRecodePage></local:AlarmRecodePage>
             </Grid>
         </Grid>
         

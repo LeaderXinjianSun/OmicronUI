@@ -18,6 +18,8 @@ using 臻鼎科技OraDB;
 using Omicron.Model;
 using System.Data;
 using System.Windows.Threading;
+using Excel = Microsoft.Office.Interop.Excel;
+using System.Runtime.InteropServices;
 
 namespace Omicron.ViewModel
 {
@@ -31,13 +33,14 @@ namespace Omicron.ViewModel
         public virtual string ParameterPageVisibility { set; get; } = "Collapsed";
         public virtual string ScanOperatePageVisibility { set; get; } = "Collapsed";
         public virtual string BarcodeRecordVisibility { set; get; } = "Collapsed";
+        public virtual string AlarmRecodePageVisibility { set; get; } = "Collapsed";
         public virtual string Msg { set; get; } = "";
         private MessagePrint messagePrint = new MessagePrint();
         private dialog mydialog = new dialog();
         public virtual string LastReUpdateStr { set; get; }
 
         public virtual ObservableCollection<CA9SQLDATA> BarcodeRecord { set; get; } = new ObservableCollection<CA9SQLDATA>();
-        
+        public virtual ObservableCollection<AlarmTableItem> AlarmRecord { set; get; } = new ObservableCollection<AlarmTableItem>();
         Queue<CA9SQLDATA> _BarcodeRecord = new Queue<CA9SQLDATA>();
 
         public virtual HImage hImage { set; get; }
@@ -88,6 +91,7 @@ namespace Omicron.ViewModel
         public virtual DataTable SinglDt { set; get; }
 
         public virtual string BarcodeRecordSaveFolderPath { set; get; }
+        public virtual string AlarmSaveFolderPath { set; get; }
 
         public virtual ushort SQLReUpdateCount { set; get; } = 0;
 
@@ -206,6 +210,7 @@ namespace Omicron.ViewModel
             ParameterPageVisibility = "Collapsed";
             ScanOperatePageVisibility = "Collapsed";
             BarcodeRecordVisibility = "Collapsed";
+            AlarmRecodePageVisibility = "Collapsed";
             //Msg = messagePrint.AddMessage("Selected HomePage");
             isLogin = false;
             LoginButtonString = "登录";
@@ -217,6 +222,7 @@ namespace Omicron.ViewModel
             ParameterPageVisibility = "Collapsed";
             ScanOperatePageVisibility = "Visible";
             BarcodeRecordVisibility = "Collapsed";
+            AlarmRecodePageVisibility = "Collapsed";
             //Msg = messagePrint.AddMessage("Selected HomePage");
             isLogin = false;
             LoginButtonString = "登录";
@@ -228,6 +234,7 @@ namespace Omicron.ViewModel
             ParameterPageVisibility = "Collapsed";
             ScanOperatePageVisibility = "Collapsed";
             BarcodeRecordVisibility = "Collapsed";
+            AlarmRecodePageVisibility = "Collapsed";
             isLogin = false;
             LoginButtonString = "登录";
         }
@@ -238,6 +245,18 @@ namespace Omicron.ViewModel
             ParameterPageVisibility = "Collapsed";
             ScanOperatePageVisibility = "Collapsed";
             BarcodeRecordVisibility = "Visible";
+            AlarmRecodePageVisibility = "Collapsed";
+            isLogin = false;
+            LoginButtonString = "登录";
+        }
+        public void ChoseAlarmRecodePage()
+        {
+            AboutPageVisibility = "Collapsed";
+            HomePageVisibility = "Collapsed";
+            ParameterPageVisibility = "Collapsed";
+            ScanOperatePageVisibility = "Collapsed";
+            BarcodeRecordVisibility = "Collapsed";
+            AlarmRecodePageVisibility = "Visible";
             isLogin = false;
             LoginButtonString = "登录";
         }
@@ -248,6 +267,7 @@ namespace Omicron.ViewModel
             ParameterPageVisibility = "Visible";
             ScanOperatePageVisibility = "Collapsed";
             BarcodeRecordVisibility = "Collapsed";
+            AlarmRecodePageVisibility = "Collapsed";
         }
         #endregion
         #region Halcon
@@ -409,6 +429,16 @@ namespace Omicron.ViewModel
                         }
                     }
                     dlg1.Dispose();
+                    break;
+                case "4":
+                    FolderBrowserDialog dlgf1 = new FolderBrowserDialog();
+                    dlgf1.Description = "请选择文件路径";
+                    if (dlgf1.ShowDialog() == DialogResult.OK)
+                    {
+                        AlarmSaveFolderPath = dlgf1.SelectedPath;
+                        Inifile.INIWriteValue(iniParameterPath, "SavePath", "AlarmSaveFolderPath", AlarmSaveFolderPath);
+                    }
+                    dlgf1.Dispose();
                     break;
                 default:
                     break;
@@ -611,6 +641,87 @@ namespace Omicron.ViewModel
             await taskFunc();
 
         }
+        private int UpdateAlarmFromExcel(string filename, AlarmTuple[] alarmTupleArray)
+        {
+            int itemsCount = 0;
+            //Create COM Objects. Create a COM object for everything that is referenced
+            Excel.Application xlApp = new Excel.Application();
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(filename);
+            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
+            Excel.Range xlRange = xlWorksheet.UsedRange;
+
+            int rowCount = xlRange.Rows.Count;
+            int colCount = xlRange.Columns.Count;
+
+            //iterate over the rows and columns and print to the console as it appears in the file
+            //excel is not zero based!!
+            for (int i = 1; i <= rowCount; i++)
+            {
+                if (xlRange.Cells[i, 1] != null && xlRange.Cells[i, 1].Value2 != null && xlRange.Cells[i, 2] != null && xlRange.Cells[i, 2].Value2 != null)
+                {
+                    alarmTupleArray[itemsCount].CoilName = xlRange.Cells[i, 1].Value2.ToString();
+                    alarmTupleArray[itemsCount].AlarmContent = xlRange.Cells[i, 2].Value2.ToString();
+                    alarmTupleArray[itemsCount].CoilStatus = false;
+                    alarmTupleArray[itemsCount].LastCoilStatus = false;
+                    itemsCount++;
+                }
+                //for (int j = 1; j <= colCount; j++)
+                //{
+                //    //new line
+                //    if (j == 1)
+                //        Console.Write("\r\n");
+
+                //    //write the value to the console
+                //    if (xlRange.Cells[i, j] != null && xlRange.Cells[i, j].Value2 != null)
+                //        Console.Write(xlRange.Cells[i, j].Value2.ToString() + "\t");
+                //}
+            }
+
+            //cleanup
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            //rule of thumb for releasing com objects:
+            //  never use two dots, all COM objects must be referenced and released individually
+            //  ex: [somthing].[something].[something] is bad
+
+            //release com objects to fully kill excel process from running in the background
+            Marshal.ReleaseComObject(xlRange);
+            Marshal.ReleaseComObject(xlWorksheet);
+
+            //close and release
+            xlWorkbook.Close();
+            Marshal.ReleaseComObject(xlWorkbook);
+
+            //quit and release
+            xlApp.Quit();
+            Marshal.ReleaseComObject(xlApp);
+
+            return itemsCount;
+        }
+        private void SaveCSVfileAlarm(AlarmTableItem item)
+        {
+            string filepath = AlarmSaveFolderPath + "\\Alarm" + DateTime.Now.ToLongDateString() + ".csv";
+            if (!Directory.Exists(AlarmSaveFolderPath))
+            {
+                Directory.CreateDirectory(AlarmSaveFolderPath);
+            }
+            try
+            {
+                if (!File.Exists(filepath))
+                {
+                    string[] heads = { "AlarmDate", "MachineID", "UserID", "AlarmMessage" };
+                    Csvfile.savetocsv(filepath, heads);
+                }
+                string[] conte = { item.AlarmDate, item.MachineID, item.UserID, item.AlarmMessage };
+                Csvfile.savetocsv(filepath, conte);
+            }
+            catch (Exception ex)
+            {
+                Msg = messagePrint.AddMessage("写入CSV文件失败");
+                Log.Default.Error("写入CSV文件失败", ex.Message);
+            }
+        }
         #region 数据库操作
         private void setLocalTime(string strDateTime)
         {
@@ -714,7 +825,7 @@ namespace Omicron.ViewModel
         #endregion
         #endregion
         #region 初始化
-        [Initialize]
+        [Initialize(InitType.Initialize)]
         public async void WindowLoaded()
         {
             var r = ReadParameter();
@@ -792,6 +903,7 @@ namespace Omicron.ViewModel
                 SQL_ora_user = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "User", "sfcabar");
                 SQL_ora_pwd = Inifile.INIGetStringValue(iniParameterPath, "Oracle", "Passwold", "sfcabar*168");
                 BarcodeRecordSaveFolderPath = Inifile.INIGetStringValue(iniParameterPath, "SavePath", "BarcodeRecordSaveFolderPath", "C:\\");
+                AlarmSaveFolderPath = Inifile.INIGetStringValue(iniParameterPath, "SavePath", "AlarmSaveFolderPath", "C:\\");
                 lastReUpdate.wDay = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wDay", "13"));
                 lastReUpdate.wDayOfWeek = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wDayOfWeek", "0"));
                 lastReUpdate.wHour = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wHour", "17"));
@@ -830,9 +942,32 @@ namespace Omicron.ViewModel
         #endregion
         #region PLC
 
-        [Initialize]
+        [Initialize(InitType.Initialize)]
         public async void RunPLC()
         {
+            AlarmTuple[] AlarmTupleArray = new AlarmTuple[200];
+
+
+            int alramItemsCount = 0;
+
+            string alarmconfigfile = System.Environment.CurrentDirectory + "\\CA9报警.xlsx";
+
+
+            try
+            {
+                alramItemsCount = UpdateAlarmFromExcel(alarmconfigfile, AlarmTupleArray);
+
+                    Msg = messagePrint.AddMessage(alramItemsCount.ToString() + " Alarm Messages have Configed...");
+
+                        
+
+            }
+            catch(Exception ex) 
+            {
+                Log.Default.Error("alarmconfigfile fail", ex.Message);
+                Msg = messagePrint.AddMessage("Alarm Messages Config Error !!!");
+            }
+
             while (true)
             {
                 await Task.Delay(100);
@@ -841,6 +976,7 @@ namespace Omicron.ViewModel
                     if (td == null) continue;
                     if (!td.State)
                     {
+                        td.Closed();
                         td.Connect();
                     }
                     if (td.State)
@@ -853,6 +989,7 @@ namespace Omicron.ViewModel
                         }
                         else
                         {
+                            //视觉
                             if (td.ReadM(ModbusState, StartAction))
                             {
                                 td.SetM(ModbusState, StartAction, false);
@@ -879,16 +1016,11 @@ namespace Omicron.ViewModel
                                     td.SetM(ModbusState, Position10, false);
                                     td.SetM(ModbusState, Position11, false);
                                     td.SetM(ModbusState, Position12, false);
-
-
-
-
-
-
                                     Msg = messagePrint.AddMessage("视觉脚本异常");
                                 }
                                 
                             }
+                            //扫码
                             if (td.ReadM(ModbusState, "M195"))
                             {
                                 td.SetM(ModbusState, "M196", false);
@@ -896,12 +1028,35 @@ namespace Omicron.ViewModel
                                 td.SetM(ModbusState, "M195", false);
                                 Scan.GetBarCode(PLCGetBarProcessCallback);
                             }
+                            //报警
+                            for (int i = 0; i < alramItemsCount; i++)
+                            {
+                                AlarmTupleArray[i].CoilStatus = td.ReadM(ModbusState, AlarmTupleArray[i].CoilName);
+                                if (AlarmTupleArray[i].LastCoilStatus != AlarmTupleArray[i].CoilStatus)
+                                {
+                                    AlarmTupleArray[i].LastCoilStatus = AlarmTupleArray[i].CoilStatus;
+                                    if (AlarmTupleArray[i].CoilStatus)
+                                    {
+                                        AlarmTableItem _alarmTableItem = new AlarmTableItem();
+                                        _alarmTableItem.AlarmDate = DateTime.Now.ToString();
+                                        _alarmTableItem.AlarmMessage = AlarmTupleArray[i].AlarmContent;
+                                        _alarmTableItem.MachineID = BLMID;
+                                        _alarmTableItem.UserID = BLUID;
+                                        SaveCSVfileAlarm(_alarmTableItem);
+                                        //AlarmTableItemQueue.Enqueue(_alarmTableItem);
+                                        AlarmRecord.Add(_alarmTableItem);
+
+                                        //记录报警
+                                    }
+                                }
+                            }
+                            
                         }
                     }
 
                     
                 }
-                catch 
+                catch(Exception ex) 
                 {
                     td.State = false;
 
@@ -1106,5 +1261,19 @@ namespace Omicron.ViewModel
         public string BLUID { get; set; }  //折线人员
         public string BLMID { get; set; }   //折线机台编号
         public string Bar { get; set; }    //单pcs条码
+    }
+    public struct AlarmTuple
+    {
+        public string CoilName;
+        public bool CoilStatus;
+        public bool LastCoilStatus;
+        public string AlarmContent;
+    }
+    public class AlarmTableItem
+    {
+        public string AlarmDate { set; get; }
+        public string MachineID { set; get; }
+        public string UserID { set; get; }
+        public string AlarmMessage { set; get; }
     }
 }
