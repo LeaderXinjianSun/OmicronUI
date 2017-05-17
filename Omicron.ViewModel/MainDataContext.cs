@@ -41,7 +41,7 @@ namespace Omicron.ViewModel
         public virtual ObservableCollection<CA9SQLDATA> BarcodeRecord { set; get; } = new ObservableCollection<CA9SQLDATA>();
         public virtual ObservableCollection<AlarmTableItem> AlarmRecord { set; get; } = new ObservableCollection<AlarmTableItem>();
         Queue<CA9SQLDATA> _BarcodeRecord = new Queue<CA9SQLDATA>();
-
+        Queue<AlarmTableItem> AlarmTableItemQueue = new Queue<AlarmTableItem>();
         public virtual HImage hImage { set; get; }
         public virtual ObservableCollection<HObject> hObjectList { set; get; }
         public virtual ObservableCollection<ROI> ROIList { set; get; } = new ObservableCollection<ROI>();
@@ -128,7 +128,7 @@ namespace Omicron.ViewModel
         public MainDataContext()
         {
             //td.ReConnectUp += ReConnectUpEventHandle;
-           
+
             Scan.StateChanged += Scan_StateChanged;
             dispatcherTimer.Tick += new EventHandler(DispatcherTimerTickUpdateUi);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
@@ -145,7 +145,7 @@ namespace Omicron.ViewModel
                 Msg = messagePrint.AddMessage("扫码枪 连接失败");
 
             }
-            
+
         }
 
 
@@ -165,7 +165,7 @@ namespace Omicron.ViewModel
             {
                 isChangeUserId = bool.Parse(Inifile.INIGetStringValue(iniParameterPath, "Loaded", "isChangeUserId", "False"));
             }
-            
+
             if (isChangeUserId)
             {
                 isChangeUserId = false;
@@ -184,6 +184,17 @@ namespace Omicron.ViewModel
                     _BarcodeRecord.Clear();
                 }
             }
+            if (AlarmTableItemQueue.Count > 0)
+            {
+                lock (this)
+                {
+                    foreach (AlarmTableItem item in AlarmTableItemQueue)
+                    {
+                        AlarmRecord.Add(item);
+                    }
+                    AlarmTableItemQueue.Clear();
+                }
+            }
 
             DateTimeUtility.SYSTEMTIME ds1 = new DateTimeUtility.SYSTEMTIME();
             DateTimeUtility.GetLocalTime(ref ds1);
@@ -198,7 +209,7 @@ namespace Omicron.ViewModel
                 SaveLastSamplTimetoIni();
                 LastReUpdateStr = lastReUpdate.ToDateTime().ToString();
             }
-            
+
         }
         #endregion
         #region 画面切换
@@ -335,12 +346,12 @@ namespace Omicron.ViewModel
             var fill11 = hdevEngine.getmeasurements("fill11");
             var fill12 = hdevEngine.getmeasurements("fill12");
 
-            FindFill1 =  (fill1.ToString() == "0");
-            FindFill2 =  (fill2.ToString() == "0");
-            FindFill3 =  (fill3.ToString() == "0");
-            FindFill4 =  (fill4.ToString() == "0");
-            FindFill5 =  (fill5.ToString() == "0");
-            FindFill6 =  (fill6.ToString() == "0");
+            FindFill1 = (fill1.ToString() == "0");
+            FindFill2 = (fill2.ToString() == "0");
+            FindFill3 = (fill3.ToString() == "0");
+            FindFill4 = (fill4.ToString() == "0");
+            FindFill5 = (fill5.ToString() == "0");
+            FindFill6 = (fill6.ToString() == "0");
 
             var mo1 = hdevEngine.getmeasurements("mo1");
             var mo2 = hdevEngine.getmeasurements("mo2");
@@ -384,7 +395,7 @@ namespace Omicron.ViewModel
         public void Selectfile(object p)
         {
 
-            
+
             switch (p.ToString())
             {
                 case "1":
@@ -414,7 +425,7 @@ namespace Omicron.ViewModel
                     {
                         string csvFileName = dlg1.FileName;
 
-                        
+
                         if (csvFileName == BarcodeRecordSaveFolderPath + @"\" + "NotUpdate" + ".csv")
                         {
                             ReUpdateBar(csvFileName, false);
@@ -444,7 +455,7 @@ namespace Omicron.ViewModel
             }
             //dlg.InitialDirectory = System.Environment.CurrentDirectory;
 
-            
+
         }
         public void SaveParameter()
         {
@@ -527,7 +538,7 @@ namespace Omicron.ViewModel
                 {
                     Directory.CreateDirectory(BarcodeRecordSaveFolderPath + @"\" + DateTime.Now.ToLongDateString().ToString());
                 }
-                filepath = BarcodeRecordSaveFolderPath + @"\" + DateTime.Now.ToLongDateString().ToString()  + @"\" + DateTime.Now.ToLongDateString().ToString() + ".csv";
+                filepath = BarcodeRecordSaveFolderPath + @"\" + DateTime.Now.ToLongDateString().ToString() + @"\" + DateTime.Now.ToLongDateString().ToString() + ".csv";
             }
             else
             {
@@ -539,10 +550,10 @@ namespace Omicron.ViewModel
 
                 if (!File.Exists(filepath))
                 {
-                    string[] heads = { "BLDATE", "BLID", "BLNAME", "BLUID", "BLMID" , "Bar" };
+                    string[] heads = { "BLDATE", "BLID", "BLNAME", "BLUID", "BLMID", "Bar" };
                     Csvfile.savetocsv(filepath, heads);
                 }
-                string[] conte = { tr.BLDATE, tr.BLID, tr.BLNAME, tr.BLUID, tr.BLMID,tr.Bar };
+                string[] conte = { tr.BLDATE, tr.BLID, tr.BLNAME, tr.BLUID, tr.BLMID, tr.Bar };
                 Csvfile.savetocsv(filepath, conte);
             }
             catch (Exception ex)
@@ -582,8 +593,10 @@ namespace Omicron.ViewModel
             dt.Columns.Add("BLUID", typeof(string));
             dt.Columns.Add("BLMID", typeof(string));
             dt.Columns.Add("Bar", typeof(string));
-            Func<Task> taskFunc = () => {
-                return Task.Run(() => {
+            Func<Task> taskFunc = () =>
+            {
+                return Task.Run(() =>
+                {
                     try
                     {
                         if (File.Exists(csvFileName))
@@ -746,7 +759,7 @@ namespace Omicron.ViewModel
                     IsTCPConnect = true;
                     arrField[0] = "SCBARCODE";
                     arrValue[0] = cA9SQLDATA.Bar;
-                    
+
                     DataSet s = oraDB.selectSQL(tablename.ToUpper(), arrField, arrValue);
                     SinglDt = s.Tables[0];
                     if (SinglDt.Rows.Count == 0)
@@ -759,7 +772,7 @@ namespace Omicron.ViewModel
                     {
                         string panelbar = (string)SinglDt.Rows[0]["SCPNLBAR"];
                         string[,] arrFieldAndNewValue = { { "BLDATE", ("to_date('" + cA9SQLDATA.BLDATE + "', 'yyyy/mm/dd hh24:mi:ss')").ToUpper() }, { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
-                        
+
                         string[,] arrFieldAndOldValue = { { "SCPNLBAR", panelbar } };
                         oraDB.updateSQL2(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
                         Msg = messagePrint.AddMessage("数据更新完成");
@@ -770,7 +783,7 @@ namespace Omicron.ViewModel
                         oraDB.disconnect();
                         return true;
                     }
-                    
+
                 }
                 else
                 {
@@ -779,17 +792,17 @@ namespace Omicron.ViewModel
                     oraDB.disconnect();
                     return false;
                 }
-                
+
             }
             catch (Exception ex)
             {
-                
+
                 Console.WriteLine(ex.Message);
                 Msg = messagePrint.AddMessage("查询数据库出错");
                 return false;
 
             }
-            
+
         }
         #endregion
         #endregion
@@ -911,11 +924,10 @@ namespace Omicron.ViewModel
         #endregion
         #region PLC
 
-        [Initialize(InitType.Initialize)]
-        public async void RunPLC()
+        [Initialize]
+        public void RunPLC()
         {
             AlarmTuple[] AlarmTupleArray = new AlarmTuple[200];
-
 
             int alramItemsCount = 0;
 
@@ -939,9 +951,10 @@ namespace Omicron.ViewModel
 
             while (true)
             {
-                await Task.Delay(100);
+                //await Task.Delay(100);
+                System.Threading.Thread.Sleep(100);
                 try
-                {                    
+                {
                     if (td == null) continue;
                     if (!td.State)
                     {
@@ -987,7 +1000,7 @@ namespace Omicron.ViewModel
                                     td.SetM(ModbusState, Position12, false);
                                     Msg = messagePrint.AddMessage("视觉脚本异常");
                                 }
-                                
+
                             }
                             //扫码
                             if (td.ReadM(ModbusState, "M195"))
@@ -1012,20 +1025,21 @@ namespace Omicron.ViewModel
                                         _alarmTableItem.MachineID = BLMID;
                                         _alarmTableItem.UserID = BLUID;
                                         SaveCSVfileAlarm(_alarmTableItem);
-                                        //AlarmTableItemQueue.Enqueue(_alarmTableItem);
-                                        AlarmRecord.Add(_alarmTableItem);
-
+                                        lock (this)
+                                        {
+                                            AlarmTableItemQueue.Enqueue(_alarmTableItem);
+                                        }
                                         //记录报警
                                     }
                                 }
                             }
-                            
+
                         }
                     }
 
-                    
+
                 }
-                catch(Exception ex) 
+                catch (Exception ex)
                 {
                     td.State = false;
 
@@ -1194,7 +1208,7 @@ namespace Omicron.ViewModel
                 cA9SQLDATA.BLUID = BLUID.ToUpper();
                 cA9SQLDATA.BLMID = BLMID.ToUpper();
                 cA9SQLDATA.Bar = BarcodeString.ToUpper();
-                
+
                 lock (this)
                 {
                     _BarcodeRecord.Enqueue(cA9SQLDATA);
@@ -1215,7 +1229,7 @@ namespace Omicron.ViewModel
                     catch (Exception ex)
                     {
                         SaveCSVfileRecord(cA9SQLDATA, false);
-                        Log.Default.Error("LookforDt_PLC", ex.Message); 
+                        Log.Default.Error("LookforDt_PLC", ex.Message);
                     }
                 }
             }
