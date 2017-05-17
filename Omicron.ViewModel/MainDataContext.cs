@@ -18,8 +18,7 @@ using 臻鼎科技OraDB;
 using Omicron.Model;
 using System.Data;
 using System.Windows.Threading;
-using Excel = Microsoft.Office.Interop.Excel;
-using System.Runtime.InteropServices;
+using OfficeOpenXml;
 
 namespace Omicron.ViewModel
 {
@@ -644,58 +643,28 @@ namespace Omicron.ViewModel
         private int UpdateAlarmFromExcel(string filename, AlarmTuple[] alarmTupleArray)
         {
             int itemsCount = 0;
-            //Create COM Objects. Create a COM object for everything that is referenced
-            Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(filename);
-            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
-            Excel.Range xlRange = xlWorksheet.UsedRange;
-
-            int rowCount = xlRange.Rows.Count;
-            int colCount = xlRange.Columns.Count;
-
-            //iterate over the rows and columns and print to the console as it appears in the file
-            //excel is not zero based!!
-            for (int i = 1; i <= rowCount; i++)
+            FileInfo existingFile = new FileInfo(filename);
+            using (ExcelPackage package = new ExcelPackage(existingFile))
             {
-                if (xlRange.Cells[i, 1] != null && xlRange.Cells[i, 1].Value2 != null && xlRange.Cells[i, 2] != null && xlRange.Cells[i, 2].Value2 != null)
+                // get the first worksheet in the workbook
+                ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
+
+                int rowCount = worksheet.Dimension.End.Row;
+                int colCount = worksheet.Dimension.End.Column;
+                for (int i = 1; i <= rowCount; i++)
                 {
-                    alarmTupleArray[itemsCount].CoilName = xlRange.Cells[i, 1].Value2.ToString();
-                    alarmTupleArray[itemsCount].AlarmContent = xlRange.Cells[i, 2].Value2.ToString();
-                    alarmTupleArray[itemsCount].CoilStatus = false;
-                    alarmTupleArray[itemsCount].LastCoilStatus = false;
-                    itemsCount++;
+                    if (worksheet.Cells[i, 1] != null && worksheet.Cells[i, 1].Value != null && worksheet.Cells[i, 2] != null && worksheet.Cells[i, 2].Value != null)
+                    {
+                        alarmTupleArray[itemsCount].CoilName = worksheet.Cells[i, 1].Value.ToString();
+                        alarmTupleArray[itemsCount].AlarmContent = worksheet.Cells[i, 2].Value.ToString();
+                        alarmTupleArray[itemsCount].CoilStatus = false;
+                        alarmTupleArray[itemsCount].LastCoilStatus = false;
+                        itemsCount++;
+                    }
+
                 }
-                //for (int j = 1; j <= colCount; j++)
-                //{
-                //    //new line
-                //    if (j == 1)
-                //        Console.Write("\r\n");
 
-                //    //write the value to the console
-                //    if (xlRange.Cells[i, j] != null && xlRange.Cells[i, j].Value2 != null)
-                //        Console.Write(xlRange.Cells[i, j].Value2.ToString() + "\t");
-                //}
             }
-
-            //cleanup
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-
-            //rule of thumb for releasing com objects:
-            //  never use two dots, all COM objects must be referenced and released individually
-            //  ex: [somthing].[something].[something] is bad
-
-            //release com objects to fully kill excel process from running in the background
-            Marshal.ReleaseComObject(xlRange);
-            Marshal.ReleaseComObject(xlWorksheet);
-
-            //close and release
-            xlWorkbook.Close();
-            Marshal.ReleaseComObject(xlWorkbook);
-
-            //quit and release
-            xlApp.Quit();
-            Marshal.ReleaseComObject(xlApp);
 
             return itemsCount;
         }
@@ -957,12 +926,12 @@ namespace Omicron.ViewModel
             {
                 alramItemsCount = UpdateAlarmFromExcel(alarmconfigfile, AlarmTupleArray);
 
-                    Msg = messagePrint.AddMessage(alramItemsCount.ToString() + " Alarm Messages have Configed...");
+                Msg = messagePrint.AddMessage(alramItemsCount.ToString() + " Alarm Messages have Configed...");
 
-                        
+
 
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 Log.Default.Error("alarmconfigfile fail", ex.Message);
                 Msg = messagePrint.AddMessage("Alarm Messages Config Error !!!");
