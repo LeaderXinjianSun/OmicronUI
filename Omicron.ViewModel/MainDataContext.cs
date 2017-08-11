@@ -19,6 +19,7 @@ using Omicron.Model;
 using System.Data;
 using System.Windows.Threading;
 using OfficeOpenXml;
+using System.Net;
 
 namespace Omicron.ViewModel
 {
@@ -128,6 +129,18 @@ namespace Omicron.ViewModel
         private bool isChangeUserId1 = false;
         private string AlarmLastDateNameStr = "";
 
+        bool Alarm_allowClean = true;
+
+        int AlarmLastClearHourofYear = 0;
+        bool isIn8or20 = false;
+        bool _isIn8or20 = false;
+
+        readonly AsyncLock m_lock = new AsyncLock();
+        //using (var releaser = await m_lock.LockAsync())
+        //{
+        //    await FileIO.WriteTextAsync(configureFile, jsonString);
+        //}
+        int updateCount = 0;
         #endregion
         #region 构造函数
         public MainDataContext()
@@ -164,7 +177,7 @@ namespace Omicron.ViewModel
         {
             IsScanConnect = Scan.State;
         }
-        private void DispatcherTimerTickUpdateUi(Object sender, EventArgs e)
+        private async void DispatcherTimerTickUpdateUi(Object sender, EventArgs e)
         {
             if (isChangeUserId1 == false)
             {
@@ -215,6 +228,85 @@ namespace Omicron.ViewModel
                 LastReUpdateStr = lastReUpdate.ToDateTime().ToString();
             }
 
+            if (AlarmLastClearHourofYear > DateTime.Now.DayOfYear * 24 + DateTime.Now.Hour)
+            {
+                AlarmLastClearHourofYear = 0;
+                Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlarmLastClearHourofYear", AlarmLastClearHourofYear.ToString());
+            }
+            isIn8or20 = DateTime.Now.Hour == 8 || DateTime.Now.Hour == 20;
+            if (isIn8or20 != _isIn8or20)
+            {
+                if (isIn8or20)
+                {
+                    if (AlarmLastClearHourofYear == DateTime.Now.DayOfYear * 24 + DateTime.Now.Hour)
+                    {
+                        Alarm_allowClean = bool.Parse(Inifile.INIGetStringValue(iniParameterPath, "Alarm", "Alarm_allowClean", "False"));
+                        if (Alarm_allowClean)
+                        {
+                            AutoClean();
+                            Alarm_allowClean = false;
+                            Inifile.INIWriteValue(iniParameterPath, "Alarm", "Alarm_allowClean", Alarm_allowClean.ToString());
+                            AlarmLastClearHourofYear = DateTime.Now.DayOfYear * 24 + DateTime.Now.Hour;
+                            Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlarmLastClearHourofYear", AlarmLastClearHourofYear.ToString());
+                        }
+                    }
+                    else
+                    {
+                        AutoClean();
+                        Alarm_allowClean = true;
+                        Inifile.INIWriteValue(iniParameterPath, "Alarm", "Alarm_allowClean", Alarm_allowClean.ToString());
+                        AlarmLastClearHourofYear = DateTime.Now.DayOfYear * 24 + DateTime.Now.Hour;
+                        Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlarmLastClearHourofYear", AlarmLastClearHourofYear.ToString());
+                    }
+                }
+                else
+                {
+                    Alarm_allowClean = true;
+                    Inifile.INIWriteValue(iniParameterPath, "Alarm", "Alarm_allowClean", Alarm_allowClean.ToString());
+                }
+                _isIn8or20 = isIn8or20;
+            }
+            if (DateTime.Now.DayOfYear * 24 + DateTime.Now.Hour - AlarmLastClearHourofYear > 12)
+            {
+                AutoClean();
+                Alarm_allowClean = true;
+                Inifile.INIWriteValue(iniParameterPath, "Alarm", "Alarm_allowClean", Alarm_allowClean.ToString());
+                if (DateTime.Now.Hour >= 8 && DateTime.Now.Hour < 20)
+                {
+                    AlarmLastClearHourofYear = DateTime.Now.DayOfYear * 24 + 8;
+                }
+                else
+                {
+                    if (DateTime.Now.Hour >= 0 && DateTime.Now.Hour < 8)
+                    {
+                        AlarmLastClearHourofYear = (DateTime.Now.DayOfYear - 1) * 24 + 20;
+                    }
+                    else
+                    {
+                        AlarmLastClearHourofYear = DateTime.Now.DayOfYear * 24 + 20;
+                    }
+                }
+                Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlarmLastClearHourofYear", AlarmLastClearHourofYear.ToString());
+            }
+
+            updateCount++;
+            if (updateCount > 10)
+            {
+                updateCount = 0;
+                using (var releaser = await m_lock.LockAsync())
+                {
+                    await UploadtoDt();
+                }
+            }
+        }
+        public void AutoClean()
+        {
+            AlarmCount = 0;
+            YieldCount = 0;
+            AlmPer = 0;
+            Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlarmCount", AlarmCount.ToString());
+            Inifile.INIWriteValue(iniParameterPath, "Alarm", "YieldCount", YieldCount.ToString());
+            Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlmPer", AlmPer.ToString());
         }
         #endregion
         #region 画面切换
@@ -517,7 +609,7 @@ namespace Omicron.ViewModel
             BarcodeString = strs[0];
         }
 
-        public void SearchAction()
+        public async void SearchAction()
         {
             if (BarcodeString.Length > 7)
             {
@@ -530,7 +622,11 @@ namespace Omicron.ViewModel
                 cA9SQLDATA.BLUID = BLUID.ToUpper();
                 cA9SQLDATA.BLMID = BLMID.ToUpper();
                 cA9SQLDATA.Bar = BarcodeString.ToUpper();
-                LookforDt(cA9SQLDATA);
+                using (var releaser = await m_lock.LockAsync())
+                {
+                    await LookforDt(cA9SQLDATA);
+                }
+                
             }
 
         }
@@ -600,7 +696,7 @@ namespace Omicron.ViewModel
             dt.Columns.Add("Bar", typeof(string));
             Func<Task> taskFunc = () =>
             {
-                return Task.Run(() =>
+                return Task.Run(async () =>
                 {
                     try
                     {
@@ -621,12 +717,20 @@ namespace Omicron.ViewModel
                                     _CA9SQLDATA.Bar = item[5].ToString();
                                     if (isdelete)
                                     {
-                                        LookforDt(_CA9SQLDATA);
+                                        using (var releaser = await m_lock.LockAsync())
+                                        {
+                                            await LookforDt(_CA9SQLDATA);
+                                        }
                                         SQLReUpdateCount++;
                                     }
                                     else
                                     {
-                                        if (LookforDt(_CA9SQLDATA))
+                                        bool r;
+                                        using (var releaser = await m_lock.LockAsync())
+                                        {
+                                            r = await LookforDt(_CA9SQLDATA);
+                                        }
+                                        if (r)
                                         {
                                             SaveCSVfileRecord(_CA9SQLDATA, true);
                                             SQLReUpdateCount++;
@@ -761,70 +865,142 @@ namespace Omicron.ViewModel
                 IsTCPConnect = false;
             }
         }
-        private bool LookforDt(CA9SQLDATA cA9SQLDATA)
+        private async Task<bool> LookforDt(CA9SQLDATA cA9SQLDATA)
         {
-
-            try
+            return await((Func<Task<bool>>)(() =>
             {
-                OraDB oraDB = new OraDB(SQL_ora_server, SQL_ora_user, SQL_ora_pwd);
-                //CA9SQLDATA cA9SQLDATA = new CA9SQLDATA();
-                //cA9SQLDATA.BLDATE = DateTime.Now.ToString();
-
-
-                //cA9SQLDATA.BLID = BLID.ToUpper();
-                //cA9SQLDATA.BLNAME = BLNAME.ToUpper();
-                //cA9SQLDATA.BLUID = BLUID.ToUpper();
-                //cA9SQLDATA.BLMID = BLMID.ToUpper();
-                string tablename = "sfcdata.barautbind";
-                if (oraDB.isConnect())
+                return Task.Run(() =>
                 {
-                    IsTCPConnect = true;
-                    arrField[0] = "SCBARCODE";
-                    arrValue[0] = cA9SQLDATA.Bar;
-
-                    DataSet s = oraDB.selectSQL(tablename.ToUpper(), arrField, arrValue);
-                    SinglDt = s.Tables[0];
-                    if (SinglDt.Rows.Count == 0)
+                    try
                     {
-                        Msg = messagePrint.AddMessage("未查询到 " + cA9SQLDATA.Bar + " 信息");
-                        oraDB.disconnect();
+                        OraDB oraDB = new OraDB(SQL_ora_server, SQL_ora_user, SQL_ora_pwd);
+                        string tablename = "sfcdata.barautbind";
+                        if (oraDB.isConnect())
+                        {
+                            IsTCPConnect = true;
+                            arrField[0] = "SCBARCODE";
+                            arrValue[0] = cA9SQLDATA.Bar;
+
+                            DataSet s = oraDB.selectSQL(tablename.ToUpper(), arrField, arrValue);
+                            SinglDt = s.Tables[0];
+                            if (SinglDt.Rows.Count == 0)
+                            {
+                                Msg = messagePrint.AddMessage("未查询到 " + cA9SQLDATA.Bar + " 信息");
+                                oraDB.disconnect();
+                                return false;
+                            }
+                            else
+                            {
+                                string panelbar = (string)SinglDt.Rows[0]["SCPNLBAR"];
+                                string[,] arrFieldAndNewValue = { { "BLDATE", ("to_date('" + cA9SQLDATA.BLDATE + "', 'yyyy/mm/dd hh24:mi:ss')").ToUpper() }, { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
+
+                                string[,] arrFieldAndOldValue = { { "SCPNLBAR", panelbar } };
+                                oraDB.updateSQL2(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
+                                Msg = messagePrint.AddMessage("数据更新完成");
+                                arrField[0] = "SCPNLBAR";
+                                arrValue[0] = panelbar.ToUpper();
+                                DataSet s1 = oraDB.selectSQL(tablename.ToUpper(), arrField, arrValue);
+                                PanelDt = s1.Tables[0];
+                                oraDB.disconnect();
+                                return true;
+                            }
+
+                        }
+                        else
+                        {
+                            IsTCPConnect = false;
+                            Msg = messagePrint.AddMessage("数据库连接失败");
+                            oraDB.disconnect();
+                            return false;
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Console.WriteLine(ex.Message);
+                        Msg = messagePrint.AddMessage("查询数据库出错");
                         return false;
+
                     }
-                    else
-                    {
-                        string panelbar = (string)SinglDt.Rows[0]["SCPNLBAR"];
-                        string[,] arrFieldAndNewValue = { { "BLDATE", ("to_date('" + cA9SQLDATA.BLDATE + "', 'yyyy/mm/dd hh24:mi:ss')").ToUpper() }, { "BLID", cA9SQLDATA.BLID }, { "BLNAME", cA9SQLDATA.BLNAME }, { "BLUID", cA9SQLDATA.BLUID }, { "BLMID", cA9SQLDATA.BLMID } };
+                });
+            }))();
 
-                        string[,] arrFieldAndOldValue = { { "SCPNLBAR", panelbar } };
-                        oraDB.updateSQL2(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
-                        Msg = messagePrint.AddMessage("数据更新完成");
-                        arrField[0] = "SCPNLBAR";
-                        arrValue[0] = panelbar.ToUpper();
-                        DataSet s1 = oraDB.selectSQL(tablename.ToUpper(), arrField, arrValue);
-                        PanelDt = s1.Tables[0];
-                        oraDB.disconnect();
-                        return true;
-                    }
-
-                }
-                else
-                {
-                    IsTCPConnect = true;
-                    Msg = messagePrint.AddMessage("数据库连接失败");
-                    oraDB.disconnect();
-                    return false;
-                }
-
-            }
-            catch (Exception ex)
+        }
+        private async Task UploadtoDt()
+        {
+            string UpdateTime = DateTime.Now.ToString("yyyyMMdd") + DateTime.Now.ToString("HHmmss");
+            string SCDATE = DateTime.Now.ToString("yyyyMMdd");
+            string SCTIME = DateTime.Now.ToString("HHmmss");
+            string hostName = Dns.GetHostName();
+            string ipstring = "NULL";
+            System.Net.IPAddress[] addressList = Dns.GetHostAddresses(hostName);//会返回所有地址，包括IPv4和IPv6 
+            foreach (IPAddress item in addressList)
             {
+                ipstring = item.ToString();
+                string[] ss = ipstring.Split(new string[] { "." }, StringSplitOptions.None);
+                if (ss.Length == 4 && ss[0] == "10")
+                {
+                    break;
+                }
+            } 
 
-                Console.WriteLine(ex.Message);
-                Msg = messagePrint.AddMessage("查询数据库出错");
-                return false;
+            await ((Func<Task>)(() =>
+            {
+                return Task.Run(() =>
+                {
+                    try
+                    {
+                        OraDB oraDB = new OraDB(SQL_ora_server, SQL_ora_user, SQL_ora_pwd);
+                        string tablename = "sfcdata.barautbind";
+                        if (oraDB.isConnect())
+                        {
+                            IsTCPConnect = true;
+                            arrField[0] = "BB01";
+                            arrValue[0] = BLMID.ToUpper();
 
-            }
+                            DataSet s = oraDB.selectSQL(tablename.ToUpper(), arrField, arrValue);
+                            SinglDt = s.Tables[0];
+                            if (SinglDt.Rows.Count == 0)
+                            {
+                                string[] arrFieldAndNewValue = { "BB01", "BB02", "BB03", "BB04", "BB05", "BB06", "BB07", "SCDATE", "SCTIME" };
+                                string[] arrFieldAndOldValue = { BLMID.ToUpper(), BLUID.ToUpper(), YieldCount.ToString(), AlarmCount.ToString(), AlmPer.ToString(), UpdateTime, ipstring, SCDATE, SCTIME };
+                                oraDB.insertSQL(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
+                                Msg = messagePrint.AddMessage("UploadtoDt数据插入完成");
+                                oraDB.disconnect();
+                                return false;
+                            }
+                            else
+                            {
+                                string[,] arrFieldAndNewValue = { { "BB02", BLUID.ToUpper() }, { "BB03", YieldCount.ToString() }, { "BB04", AlarmCount.ToString() }, { "BB05", AlmPer.ToString() }, { "BB06", UpdateTime }, { "BB07", ipstring }, { "SCDATE", SCDATE }, { "SCTIME", SCTIME } };
 
+                                string[,] arrFieldAndOldValue = { { "BB01", BLMID.ToUpper() } };
+                                oraDB.updateSQL(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
+                                Msg = messagePrint.AddMessage("UploadtoDt数据更新完成");
+                                oraDB.disconnect();
+                                return true;
+                            }
+
+                        }
+                        else
+                        {
+                            IsTCPConnect = false;
+                            Msg = messagePrint.AddMessage("UploadtoDt数据库连接失败");
+                            oraDB.disconnect();
+                            return false;
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Console.WriteLine(ex.Message);
+                        Msg = messagePrint.AddMessage("UploadtoDt查询数据库出错");
+                        return false;
+
+                    }
+                });
+            }))();
         }
         #endregion
         #endregion
@@ -917,6 +1093,11 @@ namespace Omicron.ViewModel
                 lastReUpdate.wSecond = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wSecond", "55"));
                 lastReUpdate.wYear = ushort.Parse(Inifile.INIGetStringValue(iniParameterPath, "ReUpdate", "wYear", "2016"));
                 LastReUpdateStr = lastReUpdate.ToDateTime().ToString();
+                YieldCount = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "Alarm", "YieldCount", "0"));
+                AlarmCount = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "Alarm", "AlarmCount", "0"));
+                AlmPer = double.Parse(Inifile.INIGetStringValue(iniParameterPath, "Alarm", "AlmPer", "0"));
+                AlarmLastDateNameStr = Inifile.INIGetStringValue(iniParameterPath, "Alarm", "AlarmLastDateNameStr", "0");
+                AlarmLastClearHourofYear = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "Alarm", "AlarmLastClearHourofYear", "0"));
                 return true;
             }
             catch (Exception ex)
@@ -1046,6 +1227,17 @@ namespace Omicron.ViewModel
                                         _alarmTableItem.AlarmMessage = AlarmTupleArray[i].AlarmContent;
                                         _alarmTableItem.MachineID = BLMID;
                                         _alarmTableItem.UserID = BLUID;
+                                        AlarmCount++;
+                                        if (YieldCount <= 0)
+                                        {
+                                            AlmPer = 0;
+                                        }
+                                        else
+                                        {
+                                            AlmPer = Math.Round((double)AlarmCount/ YieldCount, 2);
+                                        }
+                                        Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlarmCount", AlarmCount.ToString());
+                                        Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlmPer", AlmPer.ToString());
                                         SaveCSVfileAlarm(_alarmTableItem);
                                         lock (this)
                                         {
@@ -1208,8 +1400,11 @@ namespace Omicron.ViewModel
             await Task.Delay(1);
             td.SetM(ModbusState, EndAction, true);
             Msg = messagePrint.AddMessage(EndAction + " ," + "1");
+            YieldCount++;
+            Inifile.INIWriteValue(iniParameterPath, "Alarm", "YieldCount", YieldCount.ToString());
+
         }
-        private void PLCGetBarProcessCallback(string bar)
+        private async void PLCGetBarProcessCallback(string bar)
         {
             string resultstr = bar == "Error" ? "失败" : bar;
             string[] strs = resultstr.Split('\r');
@@ -1239,7 +1434,12 @@ namespace Omicron.ViewModel
                 {
                     try
                     {
-                        if (LookforDt(cA9SQLDATA))
+                        bool r;
+                        using (var releaser = await m_lock.LockAsync())
+                        {
+                            r = await LookforDt(cA9SQLDATA);
+                        }
+                        if (r)
                         {
                             SaveCSVfileRecord(cA9SQLDATA, true);
                         }
