@@ -11,7 +11,7 @@ namespace BingLibrary.hjb
             {
                 return Task.Run(() =>
                 {
-                    function();
+                    function();//function?.Invoke();
                 });
             }))();
             callback?.Invoke();

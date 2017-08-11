@@ -94,6 +94,10 @@ namespace Omicron.ViewModel
 
         public virtual ushort SQLReUpdateCount { set; get; } = 0;
 
+        public virtual int YieldCount { set; get; }
+        public virtual int AlarmCount { set; get; }
+        public virtual double AlmPer { set; get; }
+
         public static DispatcherTimer dispatcherTimer = new DispatcherTimer();
 
         #endregion
@@ -122,6 +126,7 @@ namespace Omicron.ViewModel
         private DateTimeUtility.SYSTEMTIME lastReUpdate = new DateTimeUtility.SYSTEMTIME();
         private bool isChangeUserId = false;
         private bool isChangeUserId1 = false;
+        private string AlarmLastDateNameStr = "";
 
         #endregion
         #region 构造函数
@@ -683,7 +688,24 @@ namespace Omicron.ViewModel
         }
         private void SaveCSVfileAlarm(AlarmTableItem item)
         {
-            string filepath = AlarmSaveFolderPath + "\\Alarm" + DateTime.Now.ToLongDateString() + ".csv";
+            if (DateTime.Now.Hour < 8)
+            {
+                if (AlarmLastDateNameStr != DateTime.Now.AddDays(-1).ToLongDateString())
+                {
+                    AlarmLastDateNameStr = DateTime.Now.AddDays(-1).ToLongDateString();
+                    Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlarmLastDateNameStr", AlarmLastDateNameStr);
+                }
+            }
+            else
+            {
+                if (AlarmLastDateNameStr != DateTime.Now.ToLongDateString())
+                {
+                    AlarmLastDateNameStr = DateTime.Now.ToLongDateString();
+                    Inifile.INIWriteValue(iniParameterPath, "Alarm", "AlarmLastDateNameStr", AlarmLastDateNameStr);
+                }
+            }
+            string Bancistr = DateTime.Now.Hour >= 8 && DateTime.Now.Hour < 20 ? "白班" : "夜班";
+            string filepath = AlarmSaveFolderPath + "\\Alarm" + AlarmLastDateNameStr + Bancistr + ".csv";
             if (!Directory.Exists(AlarmSaveFolderPath))
             {
                 Directory.CreateDirectory(AlarmSaveFolderPath);
@@ -700,8 +722,8 @@ namespace Omicron.ViewModel
             }
             catch (Exception ex)
             {
-                Msg = messagePrint.AddMessage("写入CSV文件失败");
-                Log.Default.Error("写入CSV文件失败", ex.Message);
+                Msg = messagePrint.AddMessage("SaveCSVfileAlarm.写入CSV文件失败");
+                Log.Default.Error("SaveCSVfileAlarm.写入CSV文件失败", ex.Message);
             }
         }
         #region 数据库操作
@@ -1259,4 +1281,14 @@ namespace Omicron.ViewModel
         public string UserID { set; get; }
         public string AlarmMessage { set; get; }
     }
+    //public class MachineStatus
+    //{
+    //    public string MachineID { set; get; }
+    //    public string UserID { set; get; }
+    //    public int YieldCount { set; get; }
+    //    public int AlarmCount { set; get; }
+    //    public double AlmPer { set; get; }
+    //    public string UpdateTime { set; get; }
+    //    public string RemoteIP { set; get; }
+    //}
 }
