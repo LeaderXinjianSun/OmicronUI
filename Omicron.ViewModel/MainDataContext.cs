@@ -963,7 +963,7 @@ namespace Omicron.ViewModel
                             SinglDt = s.Tables[0];
                             if (SinglDt.Rows.Count == 0)
                             {
-                                string[] arrFieldAndNewValue = { "BB01", "BB02", "BB03", "BB04", "BB05", "BB06", "BB07", "SCDATE", "SCTIME" };
+                                string[] arrFieldAndNewValue = { "BB01", "BB02", "BB03", "BB04", "BLUID", "BB06", "BB07", "SCDATE", "SCTIME" };
                                 string[] arrFieldAndOldValue = { BLMID.ToUpper(), BLUID.ToUpper(), YieldCount.ToString(), AlarmCount.ToString(), AlmPer.ToString(), UpdateTime, ipstring, SCDATE, SCTIME };
                                 oraDB.insertSQL(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
                                 Msg = messagePrint.AddMessage("UploadtoDt数据插入完成");
@@ -972,7 +972,7 @@ namespace Omicron.ViewModel
                             }
                             else
                             {
-                                string[,] arrFieldAndNewValue = { { "BB02", BLUID.ToUpper() }, { "BB03", YieldCount.ToString() }, { "BB04", AlarmCount.ToString() }, { "BB05", AlmPer.ToString() }, { "BB06", UpdateTime }, { "BB07", ipstring }, { "SCDATE", SCDATE }, { "SCTIME", SCTIME } };
+                                string[,] arrFieldAndNewValue = { { "BB02", BLUID.ToUpper() }, { "BB03", YieldCount.ToString() }, { "BB04", AlarmCount.ToString() }, { "BLUID", AlmPer.ToString() }, { "BB06", UpdateTime }, { "BB07", ipstring }, { "SCDATE", SCDATE }, { "SCTIME", SCTIME } };
 
                                 string[,] arrFieldAndOldValue = { { "BB01", BLMID.ToUpper() } };
                                 oraDB.updateSQL(tablename.ToUpper(), arrFieldAndNewValue, arrFieldAndOldValue);
